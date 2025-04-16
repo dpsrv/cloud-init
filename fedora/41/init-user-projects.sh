@@ -27,8 +27,8 @@ fi
 echo ". $user_home/rc/bin/$user.sh" > $user_home/.bashrc.d/01-$user.sh
 . rc/bin/$user.sh
 
-$user-git-clone
-$user-git-init-secrets
+#$user-git-clone
+#$user-git-init-secrets
 
-$user-up
+#$user-up
 
