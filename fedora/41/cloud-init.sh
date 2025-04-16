@@ -7,5 +7,5 @@ CLOUD_INIT_D=cloud-init.d
 while read script; do
 	scriptPath=$CLOUD_INIT_D/$script
 	[ -x $scriptPath ] || continue
-	$script
+	$scriptPath
 done < <(ls -1 $CLOUD_INIT_D/)
