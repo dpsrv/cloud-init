@@ -8,4 +8,5 @@ dnf install -y \
 	bzip2 \
 	tcpdump \
 	tmux \
-	colorized-logs
+	colorized-logs \
+	openssl
