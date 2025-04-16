@@ -30,5 +30,10 @@ echo ". $user_home/rc/bin/$user.sh" > $user_home/.bashrc.d/01-$user.sh
 $user-git-clone
 $user-git-init-secrets
 
+while ! systemctl is-active docker; do
+	echo "Waiting for docker service to become active ($?)."
+	sleep 2
+done
+
 $user-up
 
