@@ -5,7 +5,7 @@ user_home=/mnt/data/$user
 
 useradd -G docker -d $user_home $user
 
-mkdir -p ~$user/.ssh
+mkdir -p $user_home/.ssh
 
 cp /root/.ssh/authorized_keys $user_home/.ssh/
 chmod -R og-rwx $user_home/.ssh/
