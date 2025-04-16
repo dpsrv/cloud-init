@@ -22,12 +22,15 @@ if [ ! -d git-openssl-secrets ]; then
 
 	if [ "$user" != "dpsrv" ]; then
 		echo ". /mnt/data/dpsrv/rc/bin/dpsrv.sh" > $user_home/.bashrc.d/00-dpsrv.sh
-		. /mnt/data/dpsrv/rc/bin/dpsrv.sh
 	fi
 
 	echo ". $user_home/rc/bin/$user.sh" > $user_home/.bashrc.d/01-$user.sh
-	. rc/bin/$user.sh
 fi
+
+if [ "$user" != "dpsrv" ]; then
+	. /mnt/data/dpsrv/rc/bin/dpsrv.sh
+fi
+. rc/bin/$user.sh
 
 $user-git-clone
 $user-git-init-secrets
