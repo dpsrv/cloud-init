@@ -2,9 +2,11 @@
 
 dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo
 dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+mkdir /mnt/docker-data
 
 cat >> /etc/docker/daemon.json << _EOT_
 {
+	"data-root": "/mnt/docker-data",
     "log-driver": "json-file",
     "log-opts": {
         "max-size": "10m",
