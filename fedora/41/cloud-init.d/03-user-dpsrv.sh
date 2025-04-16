@@ -14,4 +14,4 @@ cp -r ~root/{.config,.gitconfig,.git-credentials} $user_home/
 
 chown -R $user:$user $user_home/
 
-sudo -u $user init-user-projects.sh
+sudo -u $user ./init-user-projects.sh
