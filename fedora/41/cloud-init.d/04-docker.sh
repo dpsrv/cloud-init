@@ -15,3 +15,12 @@ _EOT_
 
 systemctl --now enable docker
 
+(
+	while ! systemctl is-active docker; do
+    	echo "Waiting for docker service to become active ($?)."
+    	sleep 2
+	done
+
+	docker network create dpsrv
+) &
+
