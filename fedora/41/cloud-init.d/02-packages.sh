@@ -9,4 +9,5 @@ dnf install -y \
 	tcpdump \
 	tmux \
 	colorized-logs \
-	openssl
+	openssl \
+	jq
