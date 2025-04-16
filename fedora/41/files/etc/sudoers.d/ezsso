@@ -1,0 +1,1 @@
+ezsso ALL=(ALL) NOPASSWD:/sbin/iptables,/sbin/ip6tables,/sbin/iptables-save,/sbin/ip6tables-save,/usr/bin/tee /etc/sysconfig/iptables,/usr/bin/tee /etc/sysconfig/ip6tables

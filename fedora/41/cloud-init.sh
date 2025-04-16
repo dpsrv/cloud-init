@@ -1,6 +1,8 @@
 #!/bin/bash -ex
 
-CLOUD_INIT_D=$(dirname $0)/cloud-init.d
+cd $(dirname $0)
+
+CLOUD_INIT_D=cloud-init.d
 
 while read script; do
 	scriptPath=$CLOUD_INIT_D/$script
