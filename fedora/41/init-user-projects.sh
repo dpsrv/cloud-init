@@ -4,6 +4,9 @@ user=$USER
 user_home=/mnt/data/$user
 cd $user_home
 
+gpgconf -K keyboxd
+gpg --pinentry-mode=loopback --quick-gen-key --batch --passphrase '' $(git config user.email)
+
 git config --global credential.helper store
 
 if [ ! -d git-openssl-secrets ]; then
