@@ -6,6 +6,7 @@ cd $user_home
 
 gpgconf -K keyboxd
 gpg --pinentry-mode=loopback --quick-gen-key --batch --passphrase '' $(git config user.email)
+git config --global user.signingkey $(gpg --list-keys --with-colons|grep -A 1 ^pub|grep ^fpr|cut -d: -f10)
 
 git config --global credential.helper store
 
