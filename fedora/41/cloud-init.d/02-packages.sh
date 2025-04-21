@@ -10,4 +10,7 @@ dnf install -y \
 	tmux \
 	colorized-logs \
 	openssl \
-	jq
+	jq \
+	cronie
+
+systemctl enable --now crond
