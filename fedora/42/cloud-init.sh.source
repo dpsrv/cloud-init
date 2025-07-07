@@ -1,0 +1,126 @@
+#!/bin/bash -ex
+
+systemctl disable --now systemd-resolved.service
+rm /etc/resolv.conf
+ln -s /run/NetworkManager/resolv.conf /etc/resolv.conf
+systemctl restart NetworkManager
+
+dnf install -y \
+	dnf-plugins-core \
+	net-tools \
+	iptables-services \
+	iptables-legacy \
+	ipset \
+	policycoreutils-python-utils \
+	setools-console \
+	setroubleshoot-server \
+	ntpsec \
+	bind-utils \
+	nc \
+	bzip2 \
+	tcpdump \
+	cronie \
+	fail2ban \
+	tmux \
+	colorized-logs
+
+update-alternatives --set iptables /usr/sbin/iptables-legacy
+
+systemctl --now enable ntpd
+systemctl --now enable iptables.service ip6tables.service
+systemctl --now enable fail2ban
+systemctl --now enable docker
+
+curl -sfL https://get.k3s.io | sh -s - --docker
+curl -sfL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | sh -
+
+cat >> /etc/profile.d/k3s.sh << _EOT_
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+_EOT_
+
+curl -L https://github.com/kubernetes/kompose/releases/download/v1.33.0/kompose-linux-amd64 -o /usr/local/bin/kompose
+chmod a+x /usr/local/bin/kompose
+
+cat >> /usr/local/bin/dpsrv-init-projects.sh << _EOT_
+#!/bin/bash -ex
+user=\$1
+
+pushd /mnt/data/\$user
+git clone https://github.com/maxfortun/git-openssl-secrets.git
+pushd git-openssl-secrets
+ln -s git-setenv-openssl-secrets-fs.sh git-setenv-openssl-secrets.sh
+popd >/dev/null
+git clone https://github.com/\$user/rc.git
+pushd rc
+../git-openssl-secrets/git-init-openssl-secrets.sh 
+popd
+. rc/bin/\$user.sh
+\$user-git-clone
+\$user-git-init-secrets 
+
+\$user-up
+
+_EOT_
+
+cat > /etc/cron.daily/docker-builder-prune.sh << _EOT_
+#!/usr/bin/bash
+
+docker builder prune -f
+
+_EOT_
+
+chmod a+x /etc/cron.daily/docker-builder-prune.sh
+
+
+cat >> /usr/local/bin/dpsrv-init.sh << _EOT_
+#!/bin/bash -ex
+. /etc/profile.d/dpsrv.sh
+resolved=\$(host "\$(hostname -s).dpsrv.me")
+if floating_ip=\$(echo "\$resolved"|awk '{ print \$4 }'); then
+
+	if ! ip a s | grep -q \$floating_ip; then
+		ip addr add \$floating_ip dev eth0
+	fi
+
+fi
+
+sysctl -w vm.max_map_count=262144
+sysctl -w vm.swappiness=0
+sysctl -w vm.vfs_cache_pressure=1000
+sysctl -w net.ipv4.conf.all.route_localnet=1
+sysctl -w net.ipv6.conf.all.disable_ipv6=1
+sysctl -w net.ipv6.conf.default.disable_ipv6=1
+sysctl -w net.ipv6.conf.lo.disable_ipv6=1
+
+#iptables -t nat -A POSTROUTING -m addrtype --src-type LOCAL --dst-type UNICAST -j MASQUERADE -m comment --comment dpsrv:forward:port
+
+while [ -f ~/.config/openssl-salt ]; do
+	echo "Waiting for ~/.config"
+	sleep 2
+done
+
+export HOME=\$\{HOME:-/root}
+
+docker network ls | grep -q '^[^ ]*[ ]*dpsrv' || docker network create dpsrv
+
+systemctl --now enable crond
+
+bridgeIP=\$(docker network inspect --format '{{(index .IPAM.Config 0).Gateway}}' dpsrv)
+bridgeLabel=\$(ip -json address show to "\$bridgeIP/32"|jq -r '.[].addr_info[].label')
+ifconfig \$bridgeLabel promisc
+
+_EOT_
+
+chmod a+x /usr/local/bin/dpsrv-init*.sh
+
+cat >> /etc/yum.repos.d/mongodb.repo << _EOT_
+[mongodb]
+name=MongoDB
+baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/\$\{basearch}/
+gpgkey=https://www.mongodb.org/static/pgp/server-7.0.asc
+_EOT_
+
+rpm --import https://www.mongodb.org/static/pgp/server-7.0.asc
+dnf install -y mongodb-mongosh-shared-openssl3
+
+systemctl --now enable dpsrv-init
