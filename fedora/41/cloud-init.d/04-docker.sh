@@ -27,10 +27,14 @@ systemctl --now enable docker
 ) &
 
 curl -sfL https://get.k3s.io | sh -
+cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 
 curl -L https://istio.io/downloadIstio | sh -
 mv istio-*/ /opt/istio
 cat > /etc/profile.d/istio.sh  << _EOT_
 export PATH=\$PATH:/opt/istio/bin
 _EOT_
+istioctl install --set profile=demo -y
+
+kubectl label namespace default istio-injection=enabled
 
