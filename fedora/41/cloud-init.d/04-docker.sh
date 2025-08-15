@@ -29,6 +29,8 @@ systemctl --now enable docker
 curl -sfL https://get.k3s.io | sh -
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 
+kubectl create namespace dpsrv
+
 curl -L https://istio.io/downloadIstio | sh -
 mv istio-*/ /opt/istio
 cat > /etc/profile.d/istio.sh  << _EOT_
@@ -37,4 +39,5 @@ _EOT_
 istioctl install --set profile=demo -y
 
 kubectl label namespace default istio-injection=enabled
+kubectl label namespace dpsrv istio-injection=enabled
 
