@@ -42,3 +42,7 @@ istioctl install --set profile=demo -y
 kubectl label namespace default istio-injection=enabled
 kubectl label namespace dpsrv istio-injection=enabled
 
+kubectl -n dpsrv create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials
+kubectl -n dpsrv create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt
+kubectl -n dpsrv create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password
+
