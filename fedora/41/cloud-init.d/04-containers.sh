@@ -27,6 +27,7 @@ systemctl --now enable docker
 ) &
 
 curl -sfL https://get.k3s.io | sh -
+chmod go+r /etc/rancher/k3s/k3s.yaml
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 
 kubectl create namespace dpsrv
