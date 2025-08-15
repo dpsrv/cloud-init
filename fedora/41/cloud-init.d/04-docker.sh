@@ -26,3 +26,11 @@ systemctl --now enable docker
 	docker network create dpsrv
 ) &
 
+curl -sfL https://get.k3s.io | sh -
+
+curl -L https://istio.io/downloadIstio | sh -
+mv istio-*/ /opt/istio
+cat > /etc/profile.d/istio.sh  << _EOT_
+export PATH=\$PATH:/opt/istio/bin
+_EOT_
+
