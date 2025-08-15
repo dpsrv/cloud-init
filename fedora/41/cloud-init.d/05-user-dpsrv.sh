@@ -5,6 +5,7 @@ user_home=/mnt/data/$user
 DPSRV_CFG_SRC_D=${DPSRV_CFG_SRC_D:-/root}
 
 useradd -G docker -d $user_home $user
+usermod -aG k3s $user
 
 mkdir -p $user_home/.ssh
 
