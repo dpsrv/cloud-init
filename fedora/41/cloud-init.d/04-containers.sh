@@ -42,6 +42,8 @@ chgrp k3s /run/k3s/containerd/containerd.sock
 #export XDG_RUNTIME_DIR=/run/user/\$(id -u)
 #_EOT_
 
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
+
 curl -L https://istio.io/downloadIstio | sh -
 mv istio-*/ /opt/istio
 cat > /etc/profile.d/istio.sh  << _EOT_
@@ -61,6 +63,9 @@ kubectl -n dpsrv create secret docker-registry dockerhub-dpsrv \
   --docker-server=$(jq -r .ServerURL ~/.docker-credentials) \
   --docker-username=$(jq -r .Username ~/.docker-credentials) \
   --docker-password=$(jq -r .Secret ~/.docker-credentials) 
+
+kubectl -n istio-system patch svc istio-ingressgateway \
+	-p '{"spec": {"type": "NodePort"}}'
 
 cat <<_EOT_ | kubectl apply -f -
 apiVersion: networking.istio.io/v1
@@ -115,5 +120,24 @@ spec:
         host: istiod.istio-system.svc.cluster.local
         port:
           number: 15014
+_EOT_
+
+ROUTABLE_IP=$(ip -4 addr show scope global | awk '/inet/ {print $2}' | cut -d/ -f1 | head -n1)
+
+cat <<_EOT_ | kubectl apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: default
+  namespace: metallb-system
+spec:
+  addresses:
+  - $ROUTABLE_IP-$ROUTABLE_IP
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: advert
+  namespace: metallb-system
 _EOT_
 
