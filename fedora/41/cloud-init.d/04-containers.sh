@@ -26,7 +26,8 @@ systemctl --now enable docker
 	docker network create dpsrv
 ) &
 
-curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik" sh -
+curl -sfL https://get.k3s.io | sh -s - --disable traefik,servicelb,local-storage,metrics-server
+
 chmod go+r /etc/rancher/k3s/k3s.yaml
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 groupadd k3s
@@ -62,7 +63,7 @@ kubectl -n dpsrv create secret docker-registry dockerhub-dpsrv \
   --docker-password=$(jq -r .Secret ~/.docker-credentials) 
 
 cat <<_EOT_ | kubectl apply -f -
-apiVersion: networking.istio.io/v1beta1
+apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
   name: default
@@ -89,7 +90,7 @@ spec:
 _EOT_
 
 cat <<_EOT_ | kubectl apply -f -
-apiVersion: networking.istio.io/v1beta1
+apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
   name: default
