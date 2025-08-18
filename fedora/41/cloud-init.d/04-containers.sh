@@ -64,9 +64,6 @@ kubectl -n dpsrv create secret docker-registry dockerhub-dpsrv \
   --docker-username=$(jq -r .Username ~/.docker-credentials) \
   --docker-password=$(jq -r .Secret ~/.docker-credentials) 
 
-kubectl -n istio-system patch svc istio-ingressgateway \
-	-p '{"spec": {"type": "NodePort"}}'
-
 cat <<_EOT_ | kubectl apply -f -
 apiVersion: networking.istio.io/v1
 kind: Gateway
