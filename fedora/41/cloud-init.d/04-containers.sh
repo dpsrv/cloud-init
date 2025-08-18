@@ -100,12 +100,13 @@ spec:
   gateways:
   - default
   http:
+  # Redirect all HTTP traffic to HTTPS
   - match:
     - port: 80
     redirect:
-      uri: /
-      authority: ""
-      httpsRedirect: true
+      scheme: https
+      port: 443
+  # Handle HTTPS traffic normally
   - match:
     - port: 443
     route:
