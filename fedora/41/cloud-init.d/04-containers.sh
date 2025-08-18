@@ -26,7 +26,7 @@ systemctl --now enable docker
 	docker network create dpsrv
 ) &
 
-curl -sfL https://get.k3s.io | sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--disable=traefik" sh -
 chmod go+r /etc/rancher/k3s/k3s.yaml
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 groupadd k3s
@@ -36,10 +36,10 @@ chgrp k3s /run/k3s/containerd/containerd.sock
 #curl -LO https://github.com/containerd/nerdctl/releases/download/v$NERDCTL_VERSION/nerdctl-$NERDCTL_VERSION-linux-amd64.tar.gz
 #tar Cxzvf /usr/local/bin nerdctl-$NERDCTL_VERSION-linux-amd64.tar.gz
 
-cat > /etc/profile.d/nerdctl.sh  << _EOT_
-export CONTAINERD_ADDRESS=/run/k3s/containerd/containerd.sock
-export XDG_RUNTIME_DIR=/run/user/\$(id -u)
-_EOT_
+#cat > /etc/profile.d/nerdctl.sh  << _EOT_
+#export CONTAINERD_ADDRESS=/run/k3s/containerd/containerd.sock
+#export XDG_RUNTIME_DIR=/run/user/\$(id -u)
+#_EOT_
 
 curl -L https://istio.io/downloadIstio | sh -
 mv istio-*/ /opt/istio
