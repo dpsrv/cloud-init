@@ -61,3 +61,57 @@ kubectl -n dpsrv create secret docker-registry dockerhub-dpsrv \
   --docker-username=$(jq -r .Username ~/.docker-credentials) \
   --docker-password=$(jq -r .Secret ~/.docker-credentials) 
 
+cat <<_EOT_ | kubectl apply -f -
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    hosts:
+    - "*"
+    tls:
+      mode: SIMPLE
+      credentialName: domain-credential
+_EOT_
+
+cat <<_EOT_ | kubectl apply -f -
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - default
+  http:
+  - match:
+    - port: 80
+    redirect:
+      uri: /
+      authority: ""
+      httpsRedirect: true
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: istiod.istio-system.svc.cluster.local
+        port:
+          number: 15014
+_EOT_
+
