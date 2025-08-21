@@ -65,6 +65,7 @@ metadata:
 data:
   DPSRV_REGION: $DPSRV_REGION
   DPSRV_NODE: '$DPSRV_NODE'
+  DPSRV_DOMAIN: $DPSRV_DOMAIN
 _EOT_
 
 kubectl -n dpsrv create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials
