@@ -56,6 +56,17 @@ kubectl create namespace dpsrv
 kubectl label namespace default istio-injection=enabled
 kubectl label namespace dpsrv istio-injection=enabled
 
+cat <<_EOT_ | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: dpsrv
+  name: dpsrv
+data:
+  DPSRV_REGION: $DPSRV_REGION
+  DPSRV_NODE: '$DPSRV_NODE'
+_EOT_
+
 kubectl -n dpsrv create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials
 kubectl -n dpsrv create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt
 kubectl -n dpsrv create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password
