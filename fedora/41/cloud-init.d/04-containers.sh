@@ -150,3 +150,15 @@ metadata:
   namespace: metallb-system
 _EOT_
 
+cat <<_EOT_ | kubectl apply -f -
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: istio-system # Or your Istio control plane namespace
+spec:
+  mtls:
+    mode: STRICT
+_EOT_
+
+
