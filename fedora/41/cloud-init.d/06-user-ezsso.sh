@@ -19,4 +19,16 @@ chown -R $user:$user $user_home/
 kubectl create namespace $user
 kubectl label namespace $user istio-injection=enabled
 
+cat <<_EOT_ | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: $user
+  name: dpsrv
+data:
+  DPSRV_REGION: $DPSRV_REGION
+  DPSRV_NODE: '$DPSRV_NODE'
+  DPSRV_DOMAIN: $DPSRV_DOMAIN
+_EOT_
+
 sudo -u $user ./init-user-projects.sh
