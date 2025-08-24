@@ -22,8 +22,6 @@ systemctl --now enable docker
     	echo "Waiting for docker service to become active ($?)."
     	sleep 2
 	done
-
-	docker network create dpsrv
 ) &
 
 curl -sfL https://get.k3s.io | sh -s - --disable traefik,servicelb,local-storage,metrics-server
@@ -49,32 +47,10 @@ mv istio-*/ /opt/istio
 cat > /etc/profile.d/istio.sh  << _EOT_
 export PATH=\$PATH:/opt/istio/bin
 _EOT_
+
 istioctl install --set profile=demo -y
 
-kubectl create namespace dpsrv
-
 kubectl label namespace default istio-injection=enabled
-kubectl label namespace dpsrv istio-injection=enabled
-
-cat <<_EOT_ | kubectl apply -f -
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: dpsrv
-  name: dpsrv
-data:
-  DPSRV_REGION: $DPSRV_REGION
-  DPSRV_NODE: '$DPSRV_NODE'
-  DPSRV_DOMAIN: $DPSRV_DOMAIN
-_EOT_
-
-kubectl -n dpsrv create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials
-kubectl -n dpsrv create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt
-kubectl -n dpsrv create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password
-kubectl -n dpsrv create secret docker-registry dockerhub-dpsrv \
-  --docker-server=$(jq -r .ServerURL ~/.docker-credentials) \
-  --docker-username=$(jq -r .Username ~/.docker-credentials) \
-  --docker-password=$(jq -r .Secret ~/.docker-credentials) 
 
 cat <<_EOT_ | kubectl apply -f -
 apiVersion: networking.istio.io/v1
@@ -160,5 +136,4 @@ spec:
   mtls:
     mode: STRICT
 _EOT_
-
 

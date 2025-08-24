@@ -16,4 +16,7 @@ cp -r $DPSRV_CFG_SRC_D/{.config,.gitconfig,.git-credentials} $user_home/
 
 chown -R $user:$user $user_home/
 
+kubectl create namespace $user
+kubectl label namespace $user istio-injection=enabled
+
 sudo -u $user ./init-user-projects.sh
