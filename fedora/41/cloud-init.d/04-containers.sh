@@ -27,6 +27,7 @@ systemctl --now enable docker
 curl -sfL https://get.k3s.io | sh -s - --disable traefik,servicelb,local-storage,metrics-server
 
 chmod go+r /etc/rancher/k3s/k3s.yaml
+[ -d ~/.kube ] || mkdir -p ~/.kube
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 groupadd k3s
 chgrp k3s /run/k3s/containerd/containerd.sock
