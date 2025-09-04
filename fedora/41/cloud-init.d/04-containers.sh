@@ -49,6 +49,8 @@ cat > /etc/profile.d/istio.sh  << _EOT_
 export PATH=\$PATH:/opt/istio/bin
 _EOT_
 
+. /etc/profile.d/istio.sh
+
 istioctl install --set profile=demo -y
 
 kubectl label namespace default istio-injection=enabled
