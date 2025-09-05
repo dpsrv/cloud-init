@@ -37,9 +37,9 @@ kubectl -n $user create secret generic git-credentials --from-file=$DPSRV_CFG_SR
 kubectl -n $user create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt
 kubectl -n $user create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password
 kubectl -n $user create secret docker-registry dockerhub-dpsrv \
-  --docker-server=$(jq -r .ServerURL ~/.docker-credentials) \
-  --docker-username=$(jq -r .Username ~/.docker-credentials) \
-  --docker-password=$(jq -r .Secret ~/.docker-credentials)
+  --docker-server=$(jq -r .ServerURL $DPSRV_CFG_SRC_D/.docker-credentials) \
+  --docker-username=$(jq -r .Username $DPSRV_CFG_SRC_D/.docker-credentials) \
+  --docker-password=$(jq -r .Secret $DPSRV_CFG_SRC_D/.docker-credentials)
 
 sudo -u $user ./init-user-projects.sh
 
