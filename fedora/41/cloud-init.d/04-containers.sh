@@ -29,7 +29,7 @@ curl -sfL https://get.k3s.io | sh -s - --disable traefik,servicelb,local-storage
 chmod go+r /etc/rancher/k3s/k3s.yaml
 [ -d ~/.kube ] || mkdir -p ~/.kube
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
-groupadd k3s
+groupadd k3s || true
 chgrp k3s /run/k3s/containerd/containerd.sock
 
 #NERDCTL_VERSION=1.6.0
