@@ -1,7 +1,13 @@
 #!/bin/bash -ex
 
+export ROUTABLE_IP=$(ip -4 addr show scope global | awk '/inet/ {print $2}' | cut -d/ -f1 | head -n1)
+
 dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo || true
-dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin etcd
+
+cat /etc/etcd/etcd.conf.envsubst | envsubst > /etc/etcd/etcd.conf
+systemctl --now enable etcd
+
 [ -d /mnt/docker-data ] || mkdir /mnt/docker-data
 
 cat >> /etc/docker/daemon.json << _EOT_
@@ -110,7 +116,6 @@ spec:
           number: 15014
 _EOT_
 
-ROUTABLE_IP=$(ip -4 addr show scope global | awk '/inet/ {print $2}' | cut -d/ -f1 | head -n1)
 
 cat <<_EOT_ | kubectl apply -f -
 apiVersion: metallb.io/v1beta1
