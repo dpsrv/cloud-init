@@ -7,6 +7,7 @@ dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 
 ln -s /mnt/data/dpsrv/rc/secrets/letsencrypt /etc/letsencrypt
 
+export DPSRV_ETCD_CLUSTER=${DPSRV_ETCD_CLUSTER:-dpsrv}
 [ ! -f /etc/etcd/etcd.conf ] || mv /etc/etcd/etcd.conf /etc/etcd/etcd.conf.orig
 cat /etc/etcd/etcd.conf.envsubst | envsubst > /etc/etcd/etcd.conf
 systemctl --now enable etcd
