@@ -5,6 +5,9 @@ export ROUTABLE_IP=$(ip -4 addr show scope global | awk '/inet/ {print $2}' | cu
 dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo || true
 dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin etcd
 
+ln -s /mnt/data/dpsrv/rc/secrets/letsencrypt /etc/letsencrypt
+
+[ ! -f /etc/etcd/etcd.conf ] || mv /etc/etcd/etcd.conf /etc/etcd/etcd.conf.orig
 cat /etc/etcd/etcd.conf.envsubst | envsubst > /etc/etcd/etcd.conf
 systemctl --now enable etcd
 
