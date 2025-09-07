@@ -1,13 +1,32 @@
 #!/bin/bash -ex
 
-export ROUTABLE_IP=$(ip -4 addr show scope global | awk '/inet/ {print $2}' | cut -d/ -f1 | head -n1)
+export ROUTABLE_IPS=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|127\.)')
 
 dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/fedora/docker-ce.repo || true
 dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin etcd
 
 ln -s /mnt/data/dpsrv/rc/secrets/letsencrypt /etc/letsencrypt
 
-DPSRV_ETCD_CLUSTER_ID=${DPSRV_ETCD_CLUSTER_ID:-default}
+export DPSRV_ETCD_CLUSTER_ID=${DPSRV_ETCD_CLUSTER_ID:-default}
+
+export ETCD_LISTEN_CLIENT_URLS=$(
+	(
+		echo "http://127.0.0.1:2379"
+		for ip in $ROUTABLE_IPS; do
+			echo "https://$ip:2379"
+		done
+	) | tr '\n' ','
+)
+ETCD_LISTEN_CLIENT_URLS=${ETCD_LISTEN_CLIENT_URLS%%,}
+
+export ETCD_LISTEN_PEER_URLS=$(
+	for ip in $ROUTABLE_IPS; do
+		echo "https://$ip:2380"
+	done | tr '\n' ','
+)
+ETCD_LISTEN_PEER_URLS=${ETCD_LISTEN_PEER_URLS%%,}
+
+
 DPSRV_ETCD_CLUSTER_SRV=$(host -t SRV etcd-$DPSRV_ETCD_CLUSTER_ID.$DPSRV_DOMAIN | sort -k6r)
 if [ -n "$DPSRV_ETCD_CLUSTER_SRV" ]; then
 	export DPSRV_ETCD_CLUSTER=$(
