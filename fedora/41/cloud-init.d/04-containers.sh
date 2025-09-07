@@ -12,6 +12,7 @@ DPSRV_ETCD_CLUSTER_SRV=$(host -t SRV etcd-$DPSRV_ETCD_CLUSTER_ID.$DPSRV_DOMAIN |
 if [ -n "$DPSRV_ETCD_CLUSTER_SRV" ]; then
 	export DPSRV_ETCD_CLUSTER=$(
 		while read name has srv record pri weight port host; do
+			host=${host%%.}
 			echo "${host%%.*}=https://$host:$port"
 		done < <( echo "$DPSRV_ETCD_CLUSTER_SRV") | tr '\n' ','
 	)
