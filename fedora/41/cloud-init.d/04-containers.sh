@@ -7,8 +7,19 @@ dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 
 ln -s /mnt/data/dpsrv/rc/secrets/letsencrypt /etc/letsencrypt
 
-[ -n "$DPSRV_ETCD_CLUSTER" ] || export DPSRV_ETCD_CLUSTER="${DPSRV_REGION}-${DPSRV_NODE}=https://${DPSRV_REGION}-${DPSRV_NODE}.${DPSRV_DOMAIN}:2380"
-export DPSRV_ETCD_CLUSTER_TOKEN=${DPSRV_ETCD_CLUSTER:-dpsrv}
+DPSRV_ETCD_CLUSTER_ID=${DPSRV_ETCD_CLUSTER_ID:-default}
+DPSRV_ETCD_CLUSTER_SRV=$(host -t SRV etcd-$DPSRV_ETCD_CLUSTER_ID.$DPSRV_DOMAIN | sort)
+if [ -n "$DPSRV_ETCD_CLUSTER_SRV" ]; then
+	export DPSRV_ETCD_CLUSTER=$(
+		while read name has srv record pri weight port host; do
+			echo "${host%%.*}=https://$host:$port"
+		done < <( echo "$DPSRV_ETCD_CLUSTER_SRV") | tr '\n' ','
+	)
+	DPSRV_ETCD_CLUSTER=${DPSRV_ETCD_CLUSTER%%,}
+else
+	export DPSRV_ETCD_CLUSTER="${DPSRV_REGION}-${DPSRV_NODE}=https://${DPSRV_REGION}-${DPSRV_NODE}.${DPSRV_DOMAIN}:2380"
+fi
+export DPSRV_ETCD_CLUSTER_TOKEN=${DPSRV_ETCD_CLUSTER_TOKEN:-dpsrv}
 
 [ ! -f /etc/etcd/etcd.conf ] || mv /etc/etcd/etcd.conf /etc/etcd/etcd.conf.orig
 cat /etc/etcd/etcd.conf.envsubst | envsubst > /etc/etcd/etcd.conf
