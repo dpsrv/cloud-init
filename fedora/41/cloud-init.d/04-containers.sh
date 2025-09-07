@@ -8,7 +8,7 @@ dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 ln -s /mnt/data/dpsrv/rc/secrets/letsencrypt /etc/letsencrypt
 
 DPSRV_ETCD_CLUSTER_ID=${DPSRV_ETCD_CLUSTER_ID:-default}
-DPSRV_ETCD_CLUSTER_SRV=$(host -t SRV etcd-$DPSRV_ETCD_CLUSTER_ID.$DPSRV_DOMAIN | sort)
+DPSRV_ETCD_CLUSTER_SRV=$(host -t SRV etcd-$DPSRV_ETCD_CLUSTER_ID.$DPSRV_DOMAIN | sort -k6r)
 if [ -n "$DPSRV_ETCD_CLUSTER_SRV" ]; then
 	export DPSRV_ETCD_CLUSTER=$(
 		while read name has srv record pri weight port host; do
