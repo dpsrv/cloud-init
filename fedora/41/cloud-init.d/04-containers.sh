@@ -153,6 +153,11 @@ spec:
           number: 15014
 _EOT_
 
+metallb_ips=$(
+	for ip in $ROUTABLE_IPS; do
+		echo "  - $ip-$ip"
+	done
+)
 
 cat <<_EOT_ | kubectl apply -f -
 apiVersion: metallb.io/v1beta1
@@ -162,7 +167,7 @@ metadata:
   namespace: metallb-system
 spec:
   addresses:
-  - $ROUTABLE_IP-$ROUTABLE_IP
+$metallb_ips
 ---
 apiVersion: metallb.io/v1beta1
 kind: L2Advertisement
