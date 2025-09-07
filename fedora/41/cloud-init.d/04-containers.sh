@@ -42,8 +42,17 @@ fi
 export DPSRV_ETCD_CLUSTER_TOKEN=${DPSRV_ETCD_CLUSTER_TOKEN:-dpsrv}
 
 [ ! -f /etc/etcd/etcd.conf ] || mv /etc/etcd/etcd.conf /etc/etcd/etcd.conf.orig
-cat /etc/etcd/etcd.conf.envsubst | envsubst > /etc/etcd/etcd.conf
+cat /etc/etcd/etcd-private.conf.envsubst | envsubst > /etc/etcd/etcd.conf
 systemctl --now enable etcd
+
+etcdctl user add root:SuperSecretPassword
+etcdctl role add root
+etcdctl user grant-role root root
+etcdctl auth enable
+
+systemctl stop etcd
+cat /etc/etcd/etcd-public.conf.envsubst | envsubst > /etc/etcd/etcd.conf
+systemctl start etcd
 
 [ -d /mnt/docker-data ] || mkdir /mnt/docker-data
 
