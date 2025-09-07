@@ -7,53 +7,6 @@ dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker
 
 ln -s /mnt/data/dpsrv/rc/secrets/letsencrypt /etc/letsencrypt
 
-export DPSRV_ETCD_CLUSTER_ID=${DPSRV_ETCD_CLUSTER_ID:-default}
-
-export ETCD_LISTEN_CLIENT_URLS=$(
-	(
-		echo "http://127.0.0.1:2379"
-		for ip in $ROUTABLE_IPS; do
-			echo "https://$ip:2379"
-		done
-	) | tr '\n' ','
-)
-ETCD_LISTEN_CLIENT_URLS=${ETCD_LISTEN_CLIENT_URLS%%,}
-
-export ETCD_LISTEN_PEER_URLS=$(
-	for ip in $ROUTABLE_IPS; do
-		echo "https://$ip:2380"
-	done | tr '\n' ','
-)
-ETCD_LISTEN_PEER_URLS=${ETCD_LISTEN_PEER_URLS%%,}
-
-
-DPSRV_ETCD_CLUSTER_SRV=$(host -t SRV etcd-$DPSRV_ETCD_CLUSTER_ID.$DPSRV_DOMAIN | sort -k6r)
-if [ -n "$DPSRV_ETCD_CLUSTER_SRV" ]; then
-	export DPSRV_ETCD_CLUSTER=$(
-		while read name has srv record pri weight port host; do
-			host=${host%%.}
-			echo "${host%%.*}=https://$host:$port"
-		done < <( echo "$DPSRV_ETCD_CLUSTER_SRV") | tr '\n' ','
-	)
-	DPSRV_ETCD_CLUSTER=${DPSRV_ETCD_CLUSTER%%,}
-else
-	export DPSRV_ETCD_CLUSTER="${DPSRV_REGION}-${DPSRV_NODE}=https://${DPSRV_REGION}-${DPSRV_NODE}.${DPSRV_DOMAIN}:2380"
-fi
-export DPSRV_ETCD_CLUSTER_TOKEN=${DPSRV_ETCD_CLUSTER_TOKEN:-dpsrv}
-
-[ ! -f /etc/etcd/etcd.conf ] || mv /etc/etcd/etcd.conf /etc/etcd/etcd.conf.orig
-cat /etc/etcd/etcd-private.conf.envsubst | envsubst > /etc/etcd/etcd.conf
-systemctl --now enable etcd
-
-etcdctl user add root:SuperSecretPassword
-etcdctl role add root
-etcdctl user grant-role root root
-etcdctl auth enable
-
-systemctl stop etcd
-cat /etc/etcd/etcd-public.conf.envsubst | envsubst > /etc/etcd/etcd.conf
-systemctl start etcd
-
 [ -d /mnt/docker-data ] || mkdir /mnt/docker-data
 
 cat >> /etc/docker/daemon.json << _EOT_
@@ -76,7 +29,16 @@ systemctl --now enable docker
 	done
 ) &
 
-curl -sfL https://get.k3s.io | sh -s - --disable traefik,servicelb,local-storage,metrics-server
+K8S_NODES=$(host -t SRV k8s.$DPSRV_DOMAIN | sort -k6r)
+K8S_NODE_ID=$(echo "$K8S_NODES" | grep -n $DPSRV_REGION-$DPSRV_NODE | cut -d: -f1)
+if [ "$K8S_NODE_ID" = "1" ]; then
+	curl -sfL https://get.k3s.io | sh -s - server \
+		--node-name $DPSRV_REGION-$DPSRV_NODE \
+		--cluster-init \
+		--disable traefik,servicelb,local-storage,metrics-server
+else
+	# sudo cat /var/lib/rancher/k3s/server/node-token
+fi
 
 chmod go+r /etc/rancher/k3s/k3s.yaml
 [ -d ~/.kube ] || mkdir -p ~/.kube
