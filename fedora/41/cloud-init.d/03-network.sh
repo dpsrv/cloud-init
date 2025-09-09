@@ -11,3 +11,6 @@ if [ -n "$FLOATING_IP_IF" ]; then
 	fi
 fi
 
+crudini --set /etc/systemd/resolved.conf Resolve Domains "$DPSRV_DOMAIN"
+systemctl restart systemd-resolved
+

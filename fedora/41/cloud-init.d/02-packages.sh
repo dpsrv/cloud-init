@@ -11,6 +11,7 @@ dnf install -y \
 	colorized-logs \
 	openssl \
 	jq \
-	cronie
+	cronie \
+	crudini
 
 systemctl enable --now crond

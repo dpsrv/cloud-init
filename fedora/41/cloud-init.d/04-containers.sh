@@ -29,16 +29,41 @@ systemctl --now enable docker
 	done
 ) &
 
+# /usr/local/bin/k3s-uninstall.sh
+(set -x
+
 K8S_NODES=$(host -t SRV k8s.$DPSRV_DOMAIN | sort -k6r)
-K8S_NODE_ID=$(echo "$K8S_NODES" | grep -n $DPSRV_REGION-$DPSRV_NODE | cut -d: -f1)
+K8S_NODE=$(echo "$K8S_NODES" | grep -n $DPSRV_REGION-$DPSRV_NODE)
+K8S_NODE_ID=$(echo "$K8S_NODE" | cut -d: -f1)
+K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }')
+K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
+
 if [ "$K8S_NODE_ID" = "1" ]; then
-	curl -sfL https://get.k3s.io | sh -s - server \
+	echo "Primary node"
+	curl -sfL https://get.k3s.io | sh -s - server --cluster-init \
 		--node-name $DPSRV_REGION-$DPSRV_NODE \
-		--cluster-init \
+		--node-ip $K8S_NODE_IP \
+		--advertise-address $K8S_NODE_IP \
 		--disable traefik,servicelb,local-storage,metrics-server
 else
-	# sudo cat /var/lib/rancher/k3s/server/node-token
+	echo "Secondary node"
+	primary_host=$(echo "$K8S_NODES"|head -1|awk '{ print $8 }')
+	primary_name=${primary_host%.$DPSRV_DOMAIN*}
+	token=
+	while true; do
+		token=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host sudo cat /var/lib/rancher/k3s/server/node-token)
+		[ -z "$token" ] || break
+		echo "Waiting on $primary_host for token"
+		sleep 5
+	done
+	curl -sfL https://get.k3s.io | sh -s - server \
+		--server https://$primary_name:6443 \
+		--token $token \
+		--node-name $DPSRV_REGION-$DPSRV_NODE \
+		--node-ip $K8S_NODE_IP \
+		--advertise-address $K8S_NODE_IP 
 fi
+)
 
 chmod go+r /etc/rancher/k3s/k3s.yaml
 [ -d ~/.kube ] || mkdir -p ~/.kube
