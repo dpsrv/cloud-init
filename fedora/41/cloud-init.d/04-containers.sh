@@ -32,19 +32,31 @@ systemctl --now enable docker
 # /usr/local/bin/k3s-uninstall.sh
 (set -x
 
+K8S_NODE_NAME=$DPSRV_REGION-$DPSRV_NODE
 K8S_NODES=$(host -t SRV k8s.$DPSRV_DOMAIN | sort -k6r)
-K8S_NODE=$(echo "$K8S_NODES" | grep -n $DPSRV_REGION-$DPSRV_NODE)
+K8S_NODE=$(echo "$K8S_NODES" | grep -n $K8S_NODE_NAME)
 K8S_NODE_ID=$(echo "$K8S_NODE" | cut -d: -f1)
-K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }')
+K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }'|sed 's/\.$//')
 K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
+
+tls_sans=$(
+	for ip in $ROUTABLE_IPS; do
+		echo "--tls-san $ip"
+	done
+	[[ "$ROUTABLE_IPS" =~ $K8S_NODE_IP ]] || echo "--tls-san $K8S_NODE_IP"
+	echo "--tls-san $K8S_NODE_HOST"
+	echo "--tls-san 127.0.0.1"
+	echo "--tls-san $K8S_NODE_NAME"
+)
 
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
 	curl -sfL https://get.k3s.io | sh -s - server --cluster-init \
-		--node-name $DPSRV_REGION-$DPSRV_NODE \
+		--node-name $K8S_NODE_NAME \
 		--node-ip $K8S_NODE_IP \
 		--advertise-address $K8S_NODE_IP \
-		--disable traefik,servicelb,local-storage,metrics-server
+		$tls_sans \
+		--disable traefik,servicelb,local-storage,metrics-server 
 else
 	echo "Secondary node"
 	primary_host=$(echo "$K8S_NODES"|head -1|awk '{ print $8 }')
@@ -61,7 +73,9 @@ else
 		--token $token \
 		--node-name $DPSRV_REGION-$DPSRV_NODE \
 		--node-ip $K8S_NODE_IP \
-		--advertise-address $K8S_NODE_IP 
+		--advertise-address $DPSRV_REGION-$DPSRV_NODE \
+		$tls_sans \
+		--debug
 fi
 )
 
