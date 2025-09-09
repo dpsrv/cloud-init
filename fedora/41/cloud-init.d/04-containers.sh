@@ -53,9 +53,6 @@ if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
 	curl -sfL https://get.k3s.io | sh -s - server --cluster-init \
 		--node-name $K8S_NODE_NAME \
-		--node-ip $K8S_NODE_IP \
-		--advertise-address $K8S_NODE_IP \
-		$tls_sans \
 		--disable traefik,servicelb,local-storage,metrics-server 
 else
 	echo "Secondary node"
@@ -71,11 +68,7 @@ else
 	curl -sfL https://get.k3s.io | sh -s - server \
 		--server https://$primary_name:6443 \
 		--token $token \
-		--node-name $DPSRV_REGION-$DPSRV_NODE \
-		--node-ip $K8S_NODE_IP \
-		--advertise-address $DPSRV_REGION-$DPSRV_NODE \
-		$tls_sans \
-		--debug
+		--node-name $DPSRV_REGION-$DPSRV_NODE 
 fi
 )
 
