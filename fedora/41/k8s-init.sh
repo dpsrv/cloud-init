@@ -12,6 +12,7 @@
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
 
 curl -L https://istio.io/downloadIstio | sh -
+[ ! -d /opt/istio ] || rm -rf /opt/istio
 mv istio-*/ /opt/istio
 cat > /etc/profile.d/istio.sh  << _EOT_
 export PATH=\$PATH:/opt/istio/bin

@@ -33,13 +33,14 @@ data:
   DPSRV_DOMAIN: $DPSRV_DOMAIN
 _EOT_
 
-kubectl -n $user create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials
-kubectl -n $user create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt
-kubectl -n $user create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password
+kubectl -n $user create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n $user create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n $user create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password --dry-run=client -o yaml | kubectl apply -f -
 kubectl -n $user create secret docker-registry dockerhub-dpsrv \
-  --docker-server=$(jq -r .ServerURL $DPSRV_CFG_SRC_D/.docker-credentials) \
-  --docker-username=$(jq -r .Username $DPSRV_CFG_SRC_D/.docker-credentials) \
-  --docker-password=$(jq -r .Secret $DPSRV_CFG_SRC_D/.docker-credentials)
+	--docker-server=$(jq -r .ServerURL $DPSRV_CFG_SRC_D/.docker-credentials) \
+	--docker-username=$(jq -r .Username $DPSRV_CFG_SRC_D/.docker-credentials) \
+	--docker-password=$(jq -r .Secret $DPSRV_CFG_SRC_D/.docker-credentials) \
+	--dry-run=client -o yaml | kubectl apply -f -
 
 sudo -u $user ./init-user-projects.sh
 
