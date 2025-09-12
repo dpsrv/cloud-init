@@ -40,21 +40,26 @@ K8S_NODE_ID=$(echo "$K8S_NODE" | cut -d: -f1)
 K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }'|sed 's/\.$//')
 K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
 
-tls_sans=$(
-	for ip in $ROUTABLE_IPS; do
-		echo "--tls-san $ip"
-	done
-	[[ "$ROUTABLE_IPS" =~ $K8S_NODE_IP ]] || echo "--tls-san $K8S_NODE_IP"
-	echo "--tls-san $K8S_NODE_HOST"
-	echo "--tls-san 127.0.0.1"
-	echo "--tls-san $K8S_NODE_NAME"
-)
+[ -d /etc/rancher/k3s ] || mkdir -p /etc/rancher/k3s
+cat > /etc/rancher/k3s/registries.yaml << _EOT_
+mirrors:
+  "registry.local:5000":
+    endpoint:
+      - "http://registry.registry.svc.cluster.local:5000"
+_EOT_
+
 
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
 	curl -sfL https://get.k3s.io | sh -s - server --cluster-init \
 		--node-name $K8S_NODE_NAME \
 		--disable traefik,servicelb,local-storage,metrics-server 
+	while true; do
+		token=$(cat /var/lib/rancher/k3s/server/node-token)
+		[ -z "$token" ] || break
+		echo "Waiting for token"
+		sleep 5
+	done
 else
 	echo "Secondary node"
 	primary_host=$(echo "$K8S_NODES"|head -1|awk '{ print $8 }')
@@ -71,14 +76,6 @@ else
 		--token $token \
 		--node-name $DPSRV_REGION-$DPSRV_NODE 
 fi
-
-cat >> /etc/rancher/k3s/registries.yaml << _EOT_
-mirrors:
-  "registry.local:5000":
-    endpoint:
-      - "http://registry.registry.svc.cluster.local:5000"
-_EOT_
-systemctl restart k3s
 
 chmod go+r /etc/rancher/k3s/k3s.yaml
 [ -d ~/.kube ] || mkdir -p ~/.kube

@@ -166,3 +166,53 @@ _EOT_
 
 kubectl port-forward -n registry svc/registry 5000:5000 &
 
+kubectl create namespace dpsrv
+kubectl label namespace dpsrv istio-injection=enabled
+
+cat <<_EOT_ | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: dpsrv
+  name: dpsrv
+data:
+  DPSRV_REGION: $DPSRV_REGION
+  DPSRV_NODE: '$DPSRV_NODE'
+  DPSRV_DOMAIN: $DPSRV_DOMAIN
+_EOT_
+
+kubectl -n dpsrv create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n dpsrv create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n dpsrv create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n dpsrv create secret docker-registry dockerhub-dpsrv \
+    --docker-server=$(jq -r .ServerURL $DPSRV_CFG_SRC_D/.docker-credentials) \
+    --docker-username=$(jq -r .Username $DPSRV_CFG_SRC_D/.docker-credentials) \
+    --docker-password=$(jq -r .Secret $DPSRV_CFG_SRC_D/.docker-credentials) \
+    --dry-run=client -o yaml | kubectl apply -f -
+
+
+kubectl create namespace ezsso
+kubectl label namespace ezsso istio-injection=enabled
+
+cat <<_EOT_ | kubectl apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: ezsso
+  name: dpsrv
+data:
+  DPSRV_REGION: $DPSRV_REGION
+  DPSRV_NODE: '$DPSRV_NODE'
+  DPSRV_DOMAIN: $DPSRV_DOMAIN
+_EOT_
+
+kubectl -n ezsso create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n ezsso create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n ezsso create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password --dry-run=client -o yaml | kubectl apply -f -
+kubectl -n ezsso create secret docker-registry dockerhub-dpsrv \
+    --docker-server=$(jq -r .ServerURL $DPSRV_CFG_SRC_D/.docker-credentials) \
+    --docker-username=$(jq -r .Username $DPSRV_CFG_SRC_D/.docker-credentials) \
+    --docker-password=$(jq -r .Secret $DPSRV_CFG_SRC_D/.docker-credentials) \
+    --dry-run=client -o yaml | kubectl apply -f -
+
+
