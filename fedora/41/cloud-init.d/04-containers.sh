@@ -72,6 +72,14 @@ else
 		--node-name $DPSRV_REGION-$DPSRV_NODE 
 fi
 
+cat >> /etc/rancher/k3s/registries.yaml << _EOT_
+mirrors:
+  "registry.local:5000":
+    endpoint:
+      - "http://registry.registry.svc.cluster.local:5000"
+_EOT_
+systemctl restart k3s
+
 chmod go+r /etc/rancher/k3s/k3s.yaml
 [ -d ~/.kube ] || mkdir -p ~/.kube
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
