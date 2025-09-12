@@ -148,5 +148,19 @@ spec:
       volumes:
         - name: registry-storage
           emptyDir: {}   # change to PVC if you want persistence
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: registry
+  namespace: registry
+spec:
+  type: ClusterIP      # default, no NodePort needed
+  selector:
+    app: registry
+  ports:
+    - name: http
+      port: 5000       # ClusterIP port
+      targetPort: 5000 # container port
 _EOT_
 
