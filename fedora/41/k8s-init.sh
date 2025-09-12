@@ -148,20 +148,5 @@ spec:
       volumes:
         - name: registry-storage
           emptyDir: {}   # change to PVC if you want persistence
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: registry
-  namespace: registry
-spec:
-  type: NodePort
-  selector:
-    app: registry
-  ports:
-    - name: http
-      port: 5000
-      targetPort: 5000
-      nodePort: 30500
 _EOT_
 
