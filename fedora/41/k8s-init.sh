@@ -164,3 +164,5 @@ spec:
       targetPort: 5000 # container port
 _EOT_
 
+kubectl port-forward -n registry svc/registry 5000:5000 &
+
