@@ -4,26 +4,16 @@ SWD=$(dirname $0)
 
 [ ! -x /usr/local/bin/k3s-uninstall.sh ] || /usr/local/bin/k3s-uninstall.sh
 
+if [ ! -d /etc/rancher/k3s ]; then
+	cp -r $SWD/../files/etc/rancher/k3s /etc/rancher/k3s
+fi
+
 K8S_NODE_NAME=$DPSRV_REGION-$DPSRV_NODE
 K8S_NODES=$(host -t SRV k8s.$DPSRV_DOMAIN | sort -k6r)
 K8S_NODE=$(echo "$K8S_NODES" | grep -n $K8S_NODE_NAME)
 K8S_NODE_ID=$(echo "$K8S_NODE" | cut -d: -f1)
 K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }'|sed 's/\.$//')
 K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
-
-[ -d /etc/rancher/k3s ] || mkdir -p /etc/rancher/k3s
-cat > /etc/rancher/k3s/registries.yaml << _EOT_
-mirrors:
-  "localhost:5000":
-    endpoint:
-      - "http://localhost:5000"
-
-configs:
-  "localhost:5000":
-    tls:
-      insecure_skip_verify: true
-_EOT_
-
 
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
@@ -54,8 +44,8 @@ else
 fi
 
 chmod g+r /etc/rancher/k3s/k3s.yaml
-#[ -d ~/.kube ] || mkdir -p ~/.kube
-#cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
+[ -d ~/.kube ] || mkdir -p ~/.kube
+cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 groupadd k3s || true
 chgrp k3s /run/k3s/containerd/containerd.sock /etc/rancher/k3s/k3s.yaml
 
