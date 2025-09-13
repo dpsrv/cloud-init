@@ -1,0 +1,7 @@
+cluster-init: true
+node-name: cnt-use1-1
+disable:
+  - traefik
+  - servicelb
+  - local-storage
+  - metrics-server

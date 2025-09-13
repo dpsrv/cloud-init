@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+SWD=$(dirname $0)
+
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 #NERDCTL_VERSION=1.6.0
@@ -116,55 +118,7 @@ spec:
 _EOT_
 
 
-cat <<_EOT_ | kubectl apply -f -
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: registry
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: registry
-  namespace: registry
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: registry
-  template:
-    metadata:
-      labels:
-        app: registry
-    spec:
-      containers:
-        - name: registry
-          image: registry:2
-          ports:
-            - containerPort: 5000
-          volumeMounts:
-            - name: registry-storage
-              mountPath: /var/lib/registry
-      volumes:
-        - name: registry-storage
-          emptyDir: {}   # change to PVC if you want persistence
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: registry
-  namespace: registry
-spec:
-  type: ClusterIP      # default, no NodePort needed
-  selector:
-    app: registry
-  ports:
-    - name: http
-      port: 5000       # ClusterIP port
-      targetPort: 5000 # container port
-_EOT_
-
-kubectl port-forward -n registry svc/registry 5000:5000 &
+kubectl apply -f $SWD/k8s-registry.yaml
 
 kubectl create namespace dpsrv
 kubectl label namespace dpsrv istio-injection=enabled
