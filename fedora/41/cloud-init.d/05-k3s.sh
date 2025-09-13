@@ -21,7 +21,7 @@ if [ "$K8S_NODE_ID" = "1" ]; then
 		--node-name $K8S_NODE_NAME \
 		--disable traefik,servicelb,local-storage,metrics-server 
 	while true; do
-		token=$(cat /var/lib/rancher/k3s/server/node-token)
+		token=$(cat /var/lib/rancher/k3s/server/node-token || true)
 		[ -z "$token" ] || break
 		echo "Waiting for token"
 		sleep 5
