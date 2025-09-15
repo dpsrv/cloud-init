@@ -5,3 +5,12 @@ mirrors:
   "registry.registry.svc.cluster.local:5000":
     endpoint:
       - "http://registry.registry.svc.cluster.local:5000"
+
+configs:
+  "localhost:5000":
+    tls:
+      insecure_skip_verify: true
+  "registry.registry.svc.cluster.local:5000":
+    tls:
+      insecure_skip_verify: true
+
