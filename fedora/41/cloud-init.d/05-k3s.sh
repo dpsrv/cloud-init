@@ -40,6 +40,7 @@ else
 	done
 	curl -sfL https://get.k3s.io | sh -s - server \
 		--server https://$primary_name:6443 \
+		--cluster-cidr=10.244.0.0/16 \
 		--token $token \
 		--node-name $DPSRV_REGION-$DPSRV_NODE 
 fi
