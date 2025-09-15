@@ -12,6 +12,9 @@ dnf install -y \
 	openssl \
 	jq \
 	cronie \
-	crudini
+	crudini \
+	htop \
+	nload \
+	yq
 
 systemctl enable --now crond
