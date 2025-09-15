@@ -20,7 +20,7 @@ if [ "$K8S_NODE_ID" = "1" ]; then
 	curl -sfL https://get.k3s.io | sh -s - server --cluster-init \
 		--cluster-cidr=10.244.0.0/16 \
 		--node-name $K8S_NODE_NAME \
-		--disable traefik,servicelb,local-storage,metrics-server 
+		--disable traefik,servicelb
 	while true; do
 		token=$(cat /var/lib/rancher/k3s/server/node-token || true)
 		[ -z "$token" ] || break
