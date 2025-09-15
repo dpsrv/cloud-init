@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - default
+  http:
+  # Redirect all HTTP traffic to HTTPS
+  - match:
+    - port: 80
+    redirect:
+      scheme: https
+      port: 443
+  # Handle HTTPS traffic normally
+  - match:
+    - port: 443
+    route:
+    - destination:
+        host: istiod.istio-system.svc.cluster.local
+        port:
+          number: 15014
+

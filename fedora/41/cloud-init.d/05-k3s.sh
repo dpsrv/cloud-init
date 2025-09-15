@@ -54,6 +54,6 @@ chgrp k3s /run/k3s/containerd/containerd.sock /etc/rancher/k3s/k3s.yaml
 kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
 
 if [ "$K8S_NODE_ID" = "1" ]; then
-	$SWD/../k8s-init.sh
+	$SWD/../k8s/init.sh
 fi
 

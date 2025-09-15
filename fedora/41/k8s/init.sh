@@ -28,60 +28,8 @@ istioctl install --set profile=demo -y
 
 kubectl label namespace default istio-injection=enabled
 
-cat <<_EOT_ | kubectl apply -f -
-apiVersion: networking.istio.io/v1
-kind: Gateway
-metadata:
-  name: default
-  namespace: istio-system
-spec:
-  selector:
-    istio: ingressgateway
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "*"
-  - port:
-      number: 443
-      name: https
-      protocol: HTTPS
-    hosts:
-    - "*"
-    tls:
-      mode: SIMPLE
-      credentialName: domain-credential
-_EOT_
-
-cat <<_EOT_ | kubectl apply -f -
-apiVersion: networking.istio.io/v1
-kind: VirtualService
-metadata:
-  name: default
-  namespace: istio-system
-spec:
-  hosts:
-  - "*"
-  gateways:
-  - default
-  http:
-  # Redirect all HTTP traffic to HTTPS
-  - match:
-    - port: 80
-    redirect:
-      scheme: https
-      port: 443
-  # Handle HTTPS traffic normally
-  - match:
-    - port: 443
-    route:
-    - destination:
-        host: istiod.istio-system.svc.cluster.local
-        port:
-          number: 15014
-_EOT_
+kubectl apply -f $SWD/gw.yaml
+kubectl apply -f $SWD/vs-istiod.yaml
 
 metallb_ips=$(
 	for ip in $ROUTABLE_IPS; do
@@ -106,20 +54,9 @@ metadata:
   namespace: metallb-system
 _EOT_
 
-cat <<_EOT_ | kubectl apply -f -
-apiVersion: security.istio.io/v1beta1
-kind: PeerAuthentication
-metadata:
-  name: default
-  namespace: istio-system # Or your Istio control plane namespace
-spec:
-  mtls:
-    mode: STRICT
-_EOT_
-
-
-kubectl apply -f $SWD/k8s-storage.yaml
-kubectl apply -f $SWD/k8s-registry.yaml
+kubectl apply -f $SWD/pa-istio-mtls.yaml
+kubectl apply -f $SWD/storage.yaml
+kubectl apply -f $SWD/registry.yaml
 
 kubectl create namespace dpsrv
 kubectl label namespace dpsrv istio-injection=enabled
