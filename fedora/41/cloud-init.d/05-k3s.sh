@@ -18,6 +18,7 @@ K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
 	curl -sfL https://get.k3s.io | sh -s - server --cluster-init \
+		--cluster-cidr=10.244.0.0/16 \
 		--node-name $K8S_NODE_NAME \
 		--disable traefik,servicelb,local-storage,metrics-server 
 	while true; do
@@ -48,6 +49,8 @@ chmod g+r /etc/rancher/k3s/k3s.yaml
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 groupadd k3s || true
 chgrp k3s /run/k3s/containerd/containerd.sock /etc/rancher/k3s/k3s.yaml
+
+kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
 
 if [ "$K8S_NODE_ID" = "1" ]; then
 	$SWD/../k8s-init.sh
