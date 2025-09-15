@@ -118,6 +118,7 @@ spec:
 _EOT_
 
 
+kubectl apply -f $SWD/k8s-storage.yaml
 kubectl apply -f $SWD/k8s-registry.yaml
 
 kubectl create namespace dpsrv
