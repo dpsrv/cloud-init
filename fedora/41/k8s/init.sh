@@ -2,7 +2,7 @@
 
 SWD=$(dirname $0)
 
-kubectl label node $K8S_NODE_NAME node-role.kubernetes.io/dev=true --overwrite
+kubectl label node $K8S_NODE_NAME local-registry=true --overwrite
 
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
