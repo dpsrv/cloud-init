@@ -2,6 +2,8 @@
 
 SWD=$(dirname $0)
 
+kubectl label node $K8S_NODE_NAME node-role.kubernetes.io/dev=true --overwrite
+
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
 #NERDCTL_VERSION=1.6.0
