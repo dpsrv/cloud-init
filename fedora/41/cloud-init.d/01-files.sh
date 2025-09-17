@@ -13,7 +13,7 @@ while read file; do
 	[ ! -e $dest ] || continue
 	destDir=$(dirname $dest)
 	[ -d $destDir ] || sudo mkdir -p $destDir
-	sudo cp $file $dest
+	sudo cp -p $file $dest
 done < <(ls \
 	~/.config/git/openssl-* \
 	~/.docker-credentials \
