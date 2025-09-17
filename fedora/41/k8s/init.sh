@@ -17,8 +17,6 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 #export XDG_RUNTIME_DIR=/run/user/\$(id -u)
 #_EOT_
 
-kubectl -n kube-system patch configmap kube-proxy --type merge -p '{"data":{"config.conf":"apiVersion: kubeproxy.config.k8s.io/v1alpha1\nkind: KubeProxyConfiguration\nmode: \"ipvs\"\nipvs:\n  strictARP: true\n"}}'
-
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
 
 curl -L https://istio.io/downloadIstio | sh -
