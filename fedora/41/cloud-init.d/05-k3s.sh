@@ -52,6 +52,10 @@ cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 groupadd k3s || true
 chgrp k3s /run/k3s/containerd/containerd.sock /etc/rancher/k3s/k3s.yaml
 
+until kubectl get node "$K8S_NODE_NAME" &>/dev/null; do
+  echo "Waiting for $K8S_NODE_NAME to join"
+  sleep 5
+done
 kubectl wait --for=condition=Ready node/$K8S_NODE_NAME --timeout=300s
 kubectl label node $K8S_NODE_NAME DPSRV_REGION=$DPSRV_REGION --overwrite
 
