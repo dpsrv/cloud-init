@@ -6,6 +6,8 @@ kubectl label node $K8S_NODE_NAME local-registry=true --overwrite
 
 curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 
+#kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+
 #NERDCTL_VERSION=1.6.0
 #curl -LO https://github.com/containerd/nerdctl/releases/download/v$NERDCTL_VERSION/nerdctl-$NERDCTL_VERSION-linux-amd64.tar.gz
 #tar Cxzvf /usr/local/bin nerdctl-$NERDCTL_VERSION-linux-amd64.tar.gz
@@ -14,6 +16,8 @@ curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 #export CONTAINERD_ADDRESS=/run/k3s/containerd/containerd.sock
 #export XDG_RUNTIME_DIR=/run/user/\$(id -u)
 #_EOT_
+
+kubectl -n kube-system patch configmap kube-proxy --type merge -p '{"data":{"config.conf":"apiVersion: kubeproxy.config.k8s.io/v1alpha1\nkind: KubeProxyConfiguration\nmode: \"ipvs\"\nipvs:\n  strictARP: true\n"}}'
 
 kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.14.8/config/manifests/metallb-native.yaml
 

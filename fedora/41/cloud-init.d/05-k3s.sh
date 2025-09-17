@@ -20,7 +20,8 @@ if [ "$K8S_NODE_ID" = "1" ]; then
 	curl -sfL https://get.k3s.io | sh -s - server --cluster-init \
 		--cluster-cidr=10.244.0.0/16 \
 		--node-name $K8S_NODE_NAME \
-		--disable traefik,servicelb
+		--disable traefik,servicelb \
+		--disable-cloud-controller
 	while true; do
 		token=$(cat /var/lib/rancher/k3s/server/node-token || true)
 		[ -z "$token" ] || break
@@ -51,8 +52,7 @@ cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 groupadd k3s || true
 chgrp k3s /run/k3s/containerd/containerd.sock /etc/rancher/k3s/k3s.yaml
 
-kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
-
+kubectl wait --for=condition=Ready node/$NODE_NAME --timeout=300s
 kubectl label node $K8S_NODE_NAME DPSRV_REGION=$DPSRV_REGION --overwrite
 
 if [ "$K8S_NODE_ID" = "1" ]; then

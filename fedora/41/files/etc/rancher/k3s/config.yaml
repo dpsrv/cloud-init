@@ -1,5 +1,7 @@
-cluster-init: true
+#cluster-init: true
 node-name: cnt-use1-1
+flannel-backend: vxlan
 disable:
   - traefik
   - servicelb
+disable-cloud-controller: true
