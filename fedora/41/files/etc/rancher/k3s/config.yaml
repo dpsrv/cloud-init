@@ -5,3 +5,6 @@ disable:
   - traefik
   - servicelb
 disable-cloud-controller: true
+kube-proxy-arg:
+  - proxy-mode=ipvs
+  - ipvs-strict-arp=true
