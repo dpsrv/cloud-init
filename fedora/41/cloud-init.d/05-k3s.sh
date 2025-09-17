@@ -8,12 +8,12 @@ if [ ! -d /etc/rancher/k3s ]; then
 	cp -r $SWD/../files/etc/rancher/k3s /etc/rancher/k3s
 fi
 
-K8S_NODE_NAME=$DPSRV_REGION-$DPSRV_NODE
-K8S_NODES=$(host -t SRV k8s.$DPSRV_DOMAIN | sort -k6r)
-K8S_NODE=$(echo "$K8S_NODES" | grep -n $K8S_NODE_NAME)
-K8S_NODE_ID=$(echo "$K8S_NODE" | cut -d: -f1)
-K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }'|sed 's/\.$//')
-K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
+export K8S_NODE_NAME=$DPSRV_REGION-$DPSRV_NODE
+export K8S_NODES=$(host -t SRV k8s.$DPSRV_DOMAIN | sort -k6r)
+export K8S_NODE=$(echo "$K8S_NODES" | grep -n $K8S_NODE_NAME)
+export K8S_NODE_ID=$(echo "$K8S_NODE" | cut -d: -f1)
+export K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }'|sed 's/\.$//')
+export K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
 
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
@@ -52,7 +52,7 @@ cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
 groupadd k3s || true
 chgrp k3s /run/k3s/containerd/containerd.sock /etc/rancher/k3s/k3s.yaml
 
-kubectl wait --for=condition=Ready node/$NODE_NAME --timeout=300s
+kubectl wait --for=condition=Ready node/$K8S_NODE_NAME --timeout=300s
 kubectl label node $K8S_NODE_NAME DPSRV_REGION=$DPSRV_REGION --overwrite
 
 if [ "$K8S_NODE_ID" = "1" ]; then
