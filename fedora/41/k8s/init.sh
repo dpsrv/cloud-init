@@ -30,6 +30,9 @@ _EOT_
 
 istioctl install --set profile=demo -y
 
+#  Preserve original IP
+kubectl patch svc istio-ingressgateway -n istio-system -p '{"spec":{"externalTrafficPolicy":"Local"}}'
+
 kubectl label namespace default istio-injection=enabled
 
 kubectl apply -f $SWD/gw.yaml
