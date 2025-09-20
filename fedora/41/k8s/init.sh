@@ -32,6 +32,7 @@ istioctl install --set profile=demo -y
 
 #  Preserve original IP
 kubectl patch svc istio-ingressgateway -n istio-system -p '{"spec":{"externalTrafficPolicy":"Local"}}'
+kubectl patch configmap istio-sidecar-injector -n istio-system --type merge -p '{"data":{"proxyMetadata":"DNS_CAPTURE: \"true\""}}'
 
 kubectl label namespace default istio-injection=enabled
 
