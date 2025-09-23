@@ -61,5 +61,7 @@ kubectl label node $K8S_NODE_NAME DPSRV_REGION=$DPSRV_REGION --overwrite
 
 if [ "$K8S_NODE_ID" = "1" ]; then
 	$SWD/../k8s/init.sh
+else
+	$SWD/../k8s/join.sh
 fi
 
