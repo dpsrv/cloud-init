@@ -12,6 +12,7 @@ done
 echo "IPAddressPool 'default' is now present"
 
 metallb_ips=$( echo $ROUTABLE_IPS| tr ' ' '\n' | sed 's/^/\"/;s/$/\/32\",/' | tr -d '\n' | sed 's/,$//')
-kubectl patch ipaddresspool default -n metallb-system --type merge \
-	-p "{\"spec\":{\"addresses\":[$metallb_ips]}}"
 
+kubectl -n metallb-system get ipaddresspool default -o json \
+	| jq ".spec.addresses += [$metallb_ips] | .spec.addresses |= unique" \
+	| kubectl apply -f -
