@@ -41,7 +41,7 @@ kubectl apply -f $SWD/vs-istiod.yaml
 
 metallb_ips=$(
 	for ip in $ROUTABLE_IPS; do
-		echo "  - $ip-$ip"
+		echo "  - $ip/32"
 	done
 )
 
