@@ -30,6 +30,10 @@ _EOT_
 
 istioctl install --set profile=demo -y
 
+kubectl get deploy istio-ingressgateway -n istio-system -o json \
+  | jq 'del(.spec.replicas, .spec.strategy, .spec.progressDeadlineSeconds, .status, .metadata.annotations."deployment.kubernetes.io/revision") | .kind="DaemonSet" | .apiVersion="apps/v1"' \
+  | kubectl apply -f -
+
 #  Preserve original IP
 kubectl patch svc istio-ingressgateway -n istio-system -p '{"spec":{"externalTrafficPolicy":"Local"}}'
 kubectl patch configmap istio-sidecar-injector -n istio-system --type merge -p '{"data":{"proxyMetadata":"DNS_CAPTURE: \"true\""}}'
