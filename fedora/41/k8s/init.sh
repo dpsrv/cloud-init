@@ -30,9 +30,12 @@ _EOT_
 
 istioctl install --set profile=demo -y
 
+# Convert istio-ingressgateway from Deployment to DaemonSet to run on each node
 kubectl get deploy istio-ingressgateway -n istio-system -o json \
   | jq 'del(.spec.replicas, .spec.strategy, .spec.progressDeadlineSeconds, .status, .metadata.annotations."deployment.kubernetes.io/revision") | .kind="DaemonSet" | .apiVersion="apps/v1"' \
   | kubectl apply -f -
+# Remove old Deployment
+kubectl -n istio-system delete deployment istio-ingressgateway
 
 #  Preserve original IP
 kubectl patch svc istio-ingressgateway -n istio-system -p '{"spec":{"externalTrafficPolicy":"Local"}}'
