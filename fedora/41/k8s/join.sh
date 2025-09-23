@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/bash -e
 
 SWD=$(dirname $0)
 
@@ -24,23 +24,8 @@ for (( i=0; i < $metallb_ips_count; i++ )) ; do
 	svcId=$K8S_NODE_NAME
 	[ "$metallb_ips_count" = "1" ] || svcId="$svcId-$i"
 
-	cat <<_EOT_ | kubectl apply -f -
-apiVersion: v1
-kind: Service
-metadata:
-  name: istio-ingressgateway-$svcId
-  namespace: istio-system
-spec:
-  type: LoadBalancer
-  loadBalancerIP: $metallb_ip
-  selector:
-    app: istio-ingressgateway
-    istio: ingressgateway
-  ports:
-    - port: 80
-      targetPort: 80
-    - port: 443
-      targetPort: 443
-_EOT_
+	kubectl -n istio-system get svc istio-ingressgateway -o json \
+		| jq ".metadata.name = \"istio-ingressgateway-$svcId\" | .spec.loadBalancerIP = \"$metallb_ip\" | del(.metadata.uid, .metadata.resourceVersion, .metadata.creationTimestamp, .metadata.managedFields, .spec.clusterIP, .spec.clusterIPs, .status) | del(.spec.ports[].nodePort) | del(.spec.healthCheckNodePort)" \
+		| kubectl apply -f -
 
 done
