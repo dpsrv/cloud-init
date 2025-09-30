@@ -11,6 +11,8 @@ metadata:
   labels:
     app: nfs-server
 spec:
+  nodeSelector:
+    local-registry: 'true'
   containers:
     - name: nfs
       image: itsthenetwork/nfs-server-alpine:latest
@@ -62,6 +64,15 @@ spec:
     - ReadWriteMany
   nfs:
     server: nfs-server.nfs.svc.cluster.local
-    path: /exports
+    path: /
+  mountOptions:
+    - vers=4
   persistentVolumeReclaimPolicy: Retain
-
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: local-registry
+              operator: In
+              values:
+                - "true"
