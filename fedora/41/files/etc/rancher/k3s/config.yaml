@@ -5,3 +5,4 @@ disable:
   - traefik
   - servicelb
 disable-cloud-controller: true
+cluster-cidr: 10.244.0.0/16
