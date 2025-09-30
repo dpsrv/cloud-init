@@ -4,6 +4,7 @@ dnf install -y \
 	dnf-plugins-core \
 	net-tools \
 	bind-utils \
+	nfs-utils \
 	nc \
 	bzip2 \
 	tcpdump \
