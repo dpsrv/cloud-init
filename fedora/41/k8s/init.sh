@@ -72,6 +72,7 @@ _EOT_
 kubectl apply -f $SWD/pa-istio-mtls.yaml
 kubectl apply -f $SWD/storage.yaml
 kubectl apply -f $SWD/registry.yaml
+kubectl apply -f $SWD/nfs-server.yaml
 
 kubectl create namespace dpsrv
 kubectl label namespace dpsrv istio-injection=enabled

@@ -41,4 +41,17 @@ spec:
       port: 2049              # NFS default port
       targetPort: 2049
   clusterIP: None             # headless service for direct pod access
-
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  namespace: nfs
+  name: nfs
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: nfs-server.nfs.svc.cluster.local
+    path: /
