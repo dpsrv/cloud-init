@@ -17,11 +17,8 @@ export K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
 
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
-	curl -sfL https://get.k3s.io | sh -s - server --cluster-init \
-		--cluster-cidr=10.244.0.0/16 \
-		--node-name $K8S_NODE_NAME \
-		--disable traefik,servicelb \
-		--disable-cloud-controller
+	curl -sfL https://get.k3s.io | sh -s - server --node-name $K8S_NODE_NAME \
+		--cluster-init
 	while true; do
 		token=$(cat /var/lib/rancher/k3s/server/node-token || true)
 		[ -z "$token" ] || break
@@ -39,11 +36,9 @@ else
 		echo "Waiting on $primary_host for token"
 		sleep 5
 	done
-	curl -sfL https://get.k3s.io | sh -s - server \
+	curl -sfL https://get.k3s.io | sh -s - server --node-name $DPSRV_REGION-$DPSRV_NODE \
 		--server https://$primary_name:6443 \
-		--cluster-cidr=10.244.0.0/16 \
-		--token $token \
-		--node-name $DPSRV_REGION-$DPSRV_NODE 
+		--token $token 
 fi
 
 chmod g+r /etc/rancher/k3s/k3s.yaml

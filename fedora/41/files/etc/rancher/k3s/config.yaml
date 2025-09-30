@@ -1,8 +1,6 @@
-#cluster-init: true
-node-name: cnt-use1-1
-flannel-backend: vxlan
 disable:
   - traefik
   - servicelb
 disable-cloud-controller: true
+write-kubeconfig-group: k3s
 cluster-cidr: 10.244.0.0/16
