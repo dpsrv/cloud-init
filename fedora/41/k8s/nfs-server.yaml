@@ -45,7 +45,6 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  namespace: nfs
   name: nfs
 spec:
   capacity:
@@ -54,6 +53,6 @@ spec:
     - ReadWriteMany
   nfs:
     server: nfs-server.nfs.svc.cluster.local
-    path: /
+    path: /exports
   persistentVolumeReclaimPolicy: Retain
 
