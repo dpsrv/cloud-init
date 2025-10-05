@@ -16,6 +16,7 @@ dnf install -y \
 	crudini \
 	htop \
 	nload \
-	yq
+	yq \
+	unzip
 
 systemctl enable --now crond
