@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+export DPSRV_CFG_SRC_D=${DPSRV_CFG_SRC_D:-/root}
+
 SWD=$(dirname $0)
 
 kubectl label node $K8S_NODE_NAME local-registry=true --overwrite

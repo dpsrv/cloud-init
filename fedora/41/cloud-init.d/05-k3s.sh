@@ -8,6 +8,8 @@ if [ ! -d /etc/rancher/k3s ]; then
 	cp -r $SWD/../files/etc/rancher/k3s /etc/rancher/k3s
 fi
 
+export ROUTABLE_IPS=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|127\.)')
+
 export K8S_NODE_NAME=$DPSRV_REGION-$DPSRV_NODE
 export K8S_NODES=$(host -t SRV k8s.$DPSRV_DOMAIN | sort -k6r)
 export K8S_NODE=$(echo "$K8S_NODES" | grep -n $K8S_NODE_NAME)
