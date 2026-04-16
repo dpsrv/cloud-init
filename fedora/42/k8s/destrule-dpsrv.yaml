@@ -1,0 +1,11 @@
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: namespace-mtls
+  namespace: dpsrv  # same namespace
+spec:
+  host: "*.dpsrv.svc.cluster.local"  # all services in the namespace
+  trafficPolicy:
+    tls:
+      mode: ISTIO_MUTUAL
+
