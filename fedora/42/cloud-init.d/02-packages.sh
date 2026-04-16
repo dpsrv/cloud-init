@@ -4,6 +4,7 @@ dnf install -y \
 	dnf-plugins-core \
 	net-tools \
 	bind-utils \
+	nfs-utils \
 	nc \
 	bzip2 \
 	tcpdump \
@@ -11,6 +12,11 @@ dnf install -y \
 	colorized-logs \
 	openssl \
 	jq \
-	cronie
+	cronie \
+	crudini \
+	htop \
+	nload \
+	yq \
+	unzip
 
 systemctl enable --now crond
