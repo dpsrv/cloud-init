@@ -17,6 +17,8 @@ export K8S_NODE_ID=$(echo "$K8S_NODE" | cut -d: -f1)
 export K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }'|sed 's/\.$//')
 export K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
 
+groupadd k3s || true
+
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
 	curl -sfL https://get.k3s.io | sh -s - server --node-name $K8S_NODE_NAME \
@@ -46,7 +48,6 @@ fi
 chmod g+r /etc/rancher/k3s/k3s.yaml
 [ -d ~/.kube ] || mkdir -p ~/.kube
 cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
-groupadd k3s || true
 chgrp k3s /run/k3s/containerd/containerd.sock /etc/rancher/k3s/k3s.yaml
 
 until kubectl get node "$K8S_NODE_NAME" &>/dev/null; do
