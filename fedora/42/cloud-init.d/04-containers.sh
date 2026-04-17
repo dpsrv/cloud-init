@@ -29,8 +29,3 @@ systemctl --now enable docker
 	done
 ) &
 
-$SWD/../k3s-install.sh
-if [ "$K8S_NODE_ID" = "1" ]; then
-	$SWD/../k8s-init.sh
-fi
-
