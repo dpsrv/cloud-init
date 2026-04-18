@@ -20,7 +20,7 @@ export K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
 groupadd k3s || true
 
 if [ ! -f /usr/local/bin/k3s-install.sh ]; then
-	curl -sfL -o /usr/local/bin/k3s-install.sh https://get.k3s.io
+	curl --retry 3 --retry-delay 10 -sfL -o /usr/local/bin/k3s-install.sh https://get.k3s.io
 	chmod u+x /usr/local/bin/k3s-install.sh
 fi
 
