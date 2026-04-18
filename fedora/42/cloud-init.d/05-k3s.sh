@@ -40,7 +40,7 @@ else
 	primary_name=${primary_host%.$DPSRV_DOMAIN*}
 	token=
 	while true; do
-		token=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host sudo cat /var/lib/rancher/k3s/server/node-token)
+		token=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host sudo cat /var/lib/rancher/k3s/server/node-token) || true
 		[ -z "$token" ] || break
 		echo "Waiting on $primary_host for token"
 		sleep 5
