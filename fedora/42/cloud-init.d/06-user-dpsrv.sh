@@ -17,6 +17,7 @@ cp -r $DPSRV_CFG_SRC_D/{.config,.gitconfig,.git-credentials} $user_home/
 chown -R $user:$user $user_home/
 
 docker network create $user
+docker network ls
 
 sudo -u $user ./init-user-projects.sh
 
