@@ -19,9 +19,14 @@ export K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
 
 groupadd k3s || true
 
+if [ ! -f /usr/local/bin/k3s-install.sh ]; then
+	curl -sfL -o /usr/local/bin/k3s-install.sh https://get.k3s.io
+	chmod u+x /usr/local/bin/k3s-install.sh
+fi
+
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
-	curl -sfL https://get.k3s.io | sh -s - server --node-name $K8S_NODE_NAME \
+	/usr/local/bin/k3s-install.sh server --node-name $K8S_NODE_NAME \
 		--cluster-init
 	while true; do
 		token=$(cat /var/lib/rancher/k3s/server/node-token || true)
@@ -40,7 +45,7 @@ else
 		echo "Waiting on $primary_host for token"
 		sleep 5
 	done
-	curl -sfL https://get.k3s.io | sh -s - server --node-name $DPSRV_REGION-$DPSRV_NODE \
+	/usr/local/bin/k3s-install.sh server --node-name $DPSRV_REGION-$DPSRV_NODE \
 		--server https://$primary_name:6443 \
 		--token $token 
 fi
