@@ -94,12 +94,14 @@ _EOT_
 kubectl -n dpsrv create secret generic git-credentials --from-file=$DPSRV_CFG_SRC_D/.git-credentials --dry-run=client -o yaml | kubectl apply -f -
 kubectl -n dpsrv create secret generic git-openssl-salt --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-salt --dry-run=client -o yaml | kubectl apply -f -
 kubectl -n dpsrv create secret generic git-openssl-password --from-file=$DPSRV_CFG_SRC_D/.config/git/openssl-password --dry-run=client -o yaml | kubectl apply -f -
-kubectl -n dpsrv create secret docker-registry dockerhub-dpsrv \
-    --docker-server=$(jq -r .ServerURL $DPSRV_CFG_SRC_D/.docker-credentials) \
-    --docker-username=$(jq -r .Username $DPSRV_CFG_SRC_D/.docker-credentials) \
-    --docker-password=$(jq -r .Secret $DPSRV_CFG_SRC_D/.docker-credentials) \
-    --dry-run=client -o yaml | kubectl apply -f -
 
+SERVER="https://index.docker.io/v1/"
+
+kubectl -n dpsrv create secret docker-registry dockerhub-dpsrv \
+	--docker-server=$SERVER \
+	--docker-username=$(jq -r ".auths[\"$SERVER\"].auth" ~/.docker/config.json | base64 -d | cut -d: -f1) \
+	--docker-password=$(jq -r ".auths[\"$SERVER\"].auth" ~/.docker/config.json | base64 -d | cut -d: -f2-) \
+	--dry-run=client -o yaml | kubectl apply -f -
 
 kubectl create namespace ezsso
 kubectl label namespace ezsso istio-injection=enabled
