@@ -36,8 +36,19 @@ istioctl install --set profile=demo -y
 kubectl get deploy istio-ingressgateway -n istio-system -o json \
   | jq 'del(.spec.replicas, .spec.strategy, .spec.progressDeadlineSeconds, .status, .metadata.annotations."deployment.kubernetes.io/revision") | .kind="DaemonSet" | .apiVersion="apps/v1"' \
   | kubectl apply -f -
+
 # Remove old Deployment
 kubectl -n istio-system delete deployment istio-ingressgateway
+
+# Add mail ports
+kubectl -n istio-system patch svc istio-ingressgateway --type='json' -p='[
+  {"op":"add","path":"/spec/ports/-","value":{"name":"smtp","port":25,"targetPort":25,"protocol":"TCP"}},
+  {"op":"add","path":"/spec/ports/-","value":{"name":"smtps","port":465,"targetPort":465,"protocol":"TCP"}},
+  {"op":"add","path":"/spec/ports/-","value":{"name":"submission","port":587,"targetPort":587,"protocol":"TCP"}},
+  {"op":"add","path":"/spec/ports/-","value":{"name":"imap","port":143,"targetPort":143,"protocol":"TCP"}},
+  {"op":"add","path":"/spec/ports/-","value":{"name":"imaps","port":993,"targetPort":993,"protocol":"TCP"}}
+]'
+
 
 #  Preserve original IP
 kubectl patch svc istio-ingressgateway -n istio-system -p '{"spec":{"externalTrafficPolicy":"Local"}}'
