@@ -40,18 +40,28 @@ kubectl get deploy istio-ingressgateway -n istio-system -o json \
 # Remove old Deployment
 kubectl -n istio-system delete deployment istio-ingressgateway
 
-# Add mail ports
-kubectl -n istio-system patch svc istio-ingressgateway --type='json' -p='[
-  {"op":"add","path":"/spec/ports/-","value":{"name":"smtp","port":25,"targetPort":25,"protocol":"TCP"}},
-  {"op":"add","path":"/spec/ports/-","value":{"name":"smtps","port":465,"targetPort":465,"protocol":"TCP"}},
-  {"op":"add","path":"/spec/ports/-","value":{"name":"submission","port":587,"targetPort":587,"protocol":"TCP"}},
-  {"op":"add","path":"/spec/ports/-","value":{"name":"imap","port":143,"targetPort":143,"protocol":"TCP"}},
-  {"op":"add","path":"/spec/ports/-","value":{"name":"imaps","port":993,"targetPort":993,"protocol":"TCP"}}
-]'
-
-
 #  Preserve original IP
 kubectl patch svc istio-ingressgateway -n istio-system -p '{"spec":{"externalTrafficPolicy":"Local"}}'
+
+# Add mail ports
+
+  kubectl -n istio-system patch svc istio-ingressgateway --type='json' -p='[
+    {"op":"replace","path":"/spec/ports/5","value":{"name":"smtp","port":25,"targetPort":8025,"protocol":"TCP"}},
+    {"op":"replace","path":"/spec/ports/6","value":{"name":"smtps","port":465,"targetPort":8465,"protocol":"TCP"}},
+    {"op":"replace","path":"/spec/ports/7","value":{"name":"submission","port":587,"targetPort":8587,"protocol":"TCP"}},
+    {"op":"replace","path":"/spec/ports/8","value":{"name":"imap","port":143,"targetPort":8143,"protocol":"TCP"}},
+    {"op":"replace","path":"/spec/ports/9","value":{"name":"imaps","port":993,"targetPort":8993,"protocol":"TCP"}}
+  ]'
+
+  kubectl -n istio-system patch daemonset istio-ingressgateway --type='json' -p='[
+    {"op":"replace","path":"/spec/template/spec/containers/0/ports/6","value":{"containerPort":8025,"protocol":"TCP","name":"smtp"}},
+    {"op":"replace","path":"/spec/template/spec/containers/0/ports/7","value":{"containerPort":8465,"protocol":"TCP","name":"smtps"}},
+    {"op":"replace","path":"/spec/template/spec/containers/0/ports/8","value":{"containerPort":8587,"protocol":"TCP","name":"submission"}},
+    {"op":"replace","path":"/spec/template/spec/containers/0/ports/9","value":{"containerPort":8143,"protocol":"TCP","name":"imap"}},
+    {"op":"replace","path":"/spec/template/spec/containers/0/ports/10","value":{"containerPort":8993,"protocol":"TCP","name":"imaps"}}
+  ]'
+
+
 kubectl patch configmap istio-sidecar-injector -n istio-system --type merge -p '{"data":{"proxyMetadata":"DNS_CAPTURE: \"true\""}}'
 
 kubectl label namespace default istio-injection=enabled

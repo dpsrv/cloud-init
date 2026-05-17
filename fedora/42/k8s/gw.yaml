@@ -8,7 +8,7 @@ spec:
     istio: ingressgateway
   servers:
     - port:
-        number: 25
+        number: 8025
         name: smtp
         protocol: TCP
       hosts:
@@ -20,7 +20,7 @@ spec:
       hosts:
         - "*"
     - port:
-        number: 143
+        number: 8143
         name: imap
         protocol: TCP
       hosts:
@@ -35,19 +35,19 @@ spec:
         mode: SIMPLE
         credentialName: domain-credential
     - port:
-        number: 465
+        number: 8465
         name: smtps
         protocol: TCP
       hosts:
         - "*"
     - port:
-        number: 587
+        number: 8587
         name: submission
         protocol: TCP
       hosts:
         - "*"
     - port:
-        number: 993
+        number: 8993
         name: imaps
         protocol: TCP
       hosts:
