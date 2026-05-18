@@ -17,6 +17,9 @@ dnf install -y \
 	htop \
 	nload \
 	yq \
-	unzip
+	unzip \
+	swaks \
+	testssl \
+	httpd-tools
 
 systemctl enable --now crond
