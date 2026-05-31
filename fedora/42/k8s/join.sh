@@ -28,4 +28,14 @@ for (( i=0; i < $metallb_ips_count; i++ )) ; do
 		| jq ".metadata.name = \"istio-ingressgateway-$svcId\" | .spec.loadBalancerIP = \"$metallb_ip\" | del(.metadata.uid, .metadata.resourceVersion, .metadata.creationTimestamp, .metadata.managedFields, .spec.clusterIP, .spec.clusterIPs, .status) | del(.spec.ports[].nodePort) | del(.spec.healthCheckNodePort)" \
 		| kubectl apply -f -
 
+	# Add mail ports if not present
+	kubectl -n istio-system get svc istio-ingressgateway-$svcId -o jsonpath='{.spec.ports[*].name}' | grep -q smtp || \
+		kubectl -n istio-system patch svc istio-ingressgateway-$svcId --type='json' -p='[
+			{"op":"add","path":"/spec/ports/-","value":{"name":"smtp","port":25,"targetPort":8025,"protocol":"TCP"}},
+			{"op":"add","path":"/spec/ports/-","value":{"name":"smtps","port":465,"targetPort":8465,"protocol":"TCP"}},
+			{"op":"add","path":"/spec/ports/-","value":{"name":"submission","port":587,"targetPort":8587,"protocol":"TCP"}},
+			{"op":"add","path":"/spec/ports/-","value":{"name":"imap","port":143,"targetPort":8143,"protocol":"TCP"}},
+			{"op":"add","path":"/spec/ports/-","value":{"name":"imaps","port":993,"targetPort":8993,"protocol":"TCP"}}
+		]'
+
 done
