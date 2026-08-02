@@ -3,8 +3,6 @@ kind: Gateway
 metadata:
   name: default
   namespace: istio-system
-  annotations:
-    reloader.stakater.com/auto: "true"
 spec:
   selector:
     istio: ingressgateway
