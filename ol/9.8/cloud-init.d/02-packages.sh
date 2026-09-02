@@ -12,17 +12,26 @@ dnf install -y \
 	bzip2 \
 	tcpdump \
 	tmux \
-	colorized-logs \
 	openssl \
 	jq \
 	cronie \
 	crudini \
 	htop \
 	nload \
-	yq \
 	unzip \
 	swaks \
-	testssl \
 	httpd-tools
 
 systemctl enable --now crond
+
+# yq - not in EPEL, install from GitHub
+if [ ! -x /usr/local/bin/yq ]; then
+	curl -L https://github.com/mikefarah/yq/releases/latest/download/yq_linux_arm64 -o /usr/local/bin/yq
+	chmod +x /usr/local/bin/yq
+fi
+
+# testssl - not in EPEL, install from GitHub
+if [ ! -d /opt/testssl ]; then
+	git clone --depth 1 https://github.com/drwetter/testssl.sh.git /opt/testssl
+	ln -s /opt/testssl/testssl.sh /usr/local/bin/testssl
+fi
