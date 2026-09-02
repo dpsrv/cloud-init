@@ -117,7 +117,6 @@ else
 	else
 		/usr/local/bin/k3s-install.sh agent --node-name $DPSRV_REGION-$DPSRV_NODE \
 			--node-external-ip $K8S_NODE_IP \
-			--flannel-external-ip \
 			--server https://$primary_name:6443 \
 			--token $token
 	fi
@@ -147,6 +146,15 @@ until kubectl get node "$K8S_NODE_NAME" &>/dev/null; do
 done
 kubectl wait --for=condition=Ready node/$K8S_NODE_NAME --timeout=300s
 kubectl label node $K8S_NODE_NAME DPSRV_REGION=$DPSRV_REGION --overwrite
+
+# For NAT environments, fix flannel public-ip annotation to use external IP
+if [ "$K3S_MODE" = "agent" ] && [ -n "$K8S_NODE_IP" ]; then
+	current_flannel_ip=$(kubectl get node $K8S_NODE_NAME -o jsonpath='{.metadata.annotations.flannel\.alpha\.coreos\.com/public-ip}')
+	if [ "$current_flannel_ip" != "$K8S_NODE_IP" ]; then
+		echo "Fixing flannel public-ip annotation: $current_flannel_ip -> $K8S_NODE_IP"
+		kubectl annotate node $K8S_NODE_NAME flannel.alpha.coreos.com/public-ip=$K8S_NODE_IP --overwrite
+	fi
+fi
 
 if [ "$K8S_NODE_ID" = "1" ]; then
 	$SWD/../k8s/init.sh
