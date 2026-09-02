@@ -35,3 +35,9 @@ if [ ! -d /opt/testssl ]; then
 	git clone --depth 1 https://github.com/drwetter/testssl.sh.git /opt/testssl
 	ln -s /opt/testssl/testssl.sh /usr/local/bin/testssl
 fi
+
+# etcdctl - not in repos, install from GitHub
+if [ ! -x /usr/local/bin/etcdctl ]; then
+	curl -L https://github.com/etcd-io/etcd/releases/download/v3.5.9/etcd-v3.5.9-linux-arm64.tar.gz \
+		| tar xzf - --strip-components=1 -C /usr/local/bin etcd-v3.5.9-linux-arm64/etcdctl
+fi
