@@ -1,5 +1,8 @@
 #!/bin/bash -ex
 
+dnf install -y oracle-epel-release-el9
+dnf config-manager --enable ol9_developer_EPEL
+
 dnf install -y \
 	dnf-plugins-core \
 	net-tools \
