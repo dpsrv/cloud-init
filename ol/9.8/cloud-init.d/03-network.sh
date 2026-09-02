@@ -16,6 +16,9 @@ if systemctl is-active --quiet firewalld; then
 	# Istio control plane (mTLS only)
 	firewall-cmd --permanent --add-port=15012/tcp     # Istiod XDS (mTLS secured)
 	firewall-cmd --permanent --add-port=15017/tcp     # Istiod webhook (K8s auth)
+	# Trust CNI interfaces for pod-to-pod traffic
+	firewall-cmd --permanent --zone=trusted --add-interface=cni0
+	firewall-cmd --permanent --zone=trusted --add-interface=flannel.1
 	firewall-cmd --reload
 fi
 
