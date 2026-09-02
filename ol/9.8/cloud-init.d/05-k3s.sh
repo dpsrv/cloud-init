@@ -117,6 +117,7 @@ else
 	else
 		/usr/local/bin/k3s-install.sh agent --node-name $DPSRV_REGION-$DPSRV_NODE \
 			--node-external-ip $K8S_NODE_IP \
+			--flannel-external-ip \
 			--server https://$primary_name:6443 \
 			--token $token
 	fi
