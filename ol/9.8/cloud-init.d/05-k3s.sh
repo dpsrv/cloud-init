@@ -36,7 +36,7 @@ if [ "$K8S_NODE_ID" = "1" ]; then
 	done
 else
 	echo "Secondary node"
-	primary_host=$(echo "$K8S_NODES"|head -1|awk '{ print $8 }')
+	primary_host=$(echo "$K8S_NODES"|head -1|awk '{ print $8 }' | sed 's/\.$//')
 	primary_name=${primary_host%.$DPSRV_DOMAIN*}
 	token=
 	while true; do
@@ -45,9 +45,12 @@ else
 		echo "Waiting on $primary_host for token"
 		sleep 5
 	done
+	# Get k3s version from primary to ensure compatibility
+	export INSTALL_K3S_VERSION=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host k3s --version | head -1 | awk '{print $3}')
+	echo "Installing k3s version $INSTALL_K3S_VERSION to match primary"
 	/usr/local/bin/k3s-install.sh server --node-name $DPSRV_REGION-$DPSRV_NODE \
 		--server https://$primary_name:6443 \
-		--token $token 
+		--token $token
 fi
 
 chmod g+r /etc/rancher/k3s/k3s.yaml
