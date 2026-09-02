@@ -36,8 +36,7 @@ if [ "$K8S_NODE_ID" = "1" ]; then
 	done
 else
 	echo "Secondary node"
-	primary_host=$(echo "$K8S_NODES"|head -1|awk '{ print $8 }')
-	primary_name=${primary_host%.$DPSRV_DOMAIN*}
+	primary_host=$(echo "$K8S_NODES"|head -1|awk '{ print $8 }' | sed 's/\.$//')
 	token=
 	while true; do
 		token=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host sudo cat /var/lib/rancher/k3s/server/node-token) || true
@@ -46,7 +45,7 @@ else
 		sleep 5
 	done
 	/usr/local/bin/k3s-install.sh server --node-name $DPSRV_REGION-$DPSRV_NODE \
-		--server https://$primary_name:6443 \
+		--server https://$primary_host:6443 \
 		--token $token 
 fi
 
