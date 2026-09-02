@@ -13,12 +13,9 @@ if systemctl is-active --quiet firewalld; then
 	firewall-cmd --permanent --add-port=443/tcp       # HTTPS
 	firewall-cmd --permanent --add-port=15021/tcp     # Health check
 	firewall-cmd --permanent --add-port=15443/tcp     # SNI passthrough
-	# Istio control plane and sidecars
-	firewall-cmd --permanent --add-port=15010/tcp     # Istiod XDS (plaintext)
-	firewall-cmd --permanent --add-port=15012/tcp     # Istiod XDS (mTLS)
-	firewall-cmd --permanent --add-port=15017/tcp     # Istiod webhook
-	firewall-cmd --permanent --add-port=15001/tcp     # Envoy outbound
-	firewall-cmd --permanent --add-port=15006/tcp     # Envoy inbound
+	# Istio control plane (mTLS only)
+	firewall-cmd --permanent --add-port=15012/tcp     # Istiod XDS (mTLS secured)
+	firewall-cmd --permanent --add-port=15017/tcp     # Istiod webhook (K8s auth)
 	firewall-cmd --reload
 fi
 
