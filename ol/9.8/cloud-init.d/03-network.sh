@@ -8,6 +8,11 @@ if systemctl is-active --quiet firewalld; then
 	firewall-cmd --permanent --add-port=8472/udp      # Flannel VXLAN
 	firewall-cmd --permanent --add-port=51820/udp     # Flannel Wireguard
 	firewall-cmd --permanent --add-port=51821/udp     # Flannel Wireguard IPv6
+	# Istio ingress gateway
+	firewall-cmd --permanent --add-port=80/tcp        # HTTP
+	firewall-cmd --permanent --add-port=443/tcp       # HTTPS
+	firewall-cmd --permanent --add-port=15021/tcp     # Health check
+	firewall-cmd --permanent --add-port=15443/tcp     # SNI passthrough
 	firewall-cmd --reload
 fi
 
