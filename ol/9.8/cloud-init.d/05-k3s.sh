@@ -4,7 +4,7 @@ SWD=$(dirname $0)
 
 [ ! -x /usr/local/bin/k3s-uninstall.sh ] || /usr/local/bin/k3s-uninstall.sh
 [ ! -x /usr/local/bin/k3s-agent-uninstall.sh ] || /usr/local/bin/k3s-agent-uninstall.sh
-rm -rf /etc/rancher/k3s
+rm -rf /etc/rancher/k3s /etc/rancher/node /var/lib/rancher/k3s
 
 # Get routable IPs from interface (works on Contabo where public IP is on interface)
 export ROUTABLE_IPS=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|127\.)')
@@ -69,6 +69,10 @@ else
 	# Get k3s version from primary to ensure compatibility
 	export INSTALL_K3S_VERSION=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host k3s --version | head -1 | awk '{print $3}')
 	echo "Installing k3s version $INSTALL_K3S_VERSION to match primary"
+
+	# Remove stale node entry from cluster (from previous instance)
+	echo "Removing any stale node entry for $K8S_NODE_NAME"
+	ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host "kubectl delete node $K8S_NODE_NAME 2>/dev/null" || true
 
 	if [ "$K3S_MODE" = "server" ]; then
 		# Remove any existing etcd member for this node before joining
