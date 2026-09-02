@@ -1,5 +1,10 @@
 #!/bin/bash -ex
 
+# Ensure /usr/local/bin is in PATH for all users
+if ! grep -q '/usr/local/bin' /etc/profile.d/local-path.sh 2>/dev/null; then
+	echo 'export PATH=$PATH:/usr/local/bin' > /etc/profile.d/local-path.sh
+fi
+
 while read source; do
 	target=${source#files}
 	targetDir=${target%/*}
