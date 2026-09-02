@@ -56,6 +56,32 @@ else
 	# Get k3s version from primary to ensure compatibility
 	export INSTALL_K3S_VERSION=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host k3s --version | head -1 | awk '{print $3}')
 	echo "Installing k3s version $INSTALL_K3S_VERSION to match primary"
+
+	# Remove stale etcd member if present with wrong IP
+	stale_member=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host "docker run --rm \
+		-v /var/lib/rancher/k3s/server/tls/etcd:/certs:ro \
+		--network host \
+		quay.io/coreos/etcd:v3.5.9 etcdctl \
+		--endpoints=https://127.0.0.1:2379 \
+		--cacert=/certs/server-ca.crt \
+		--cert=/certs/client.crt \
+		--key=/certs/client.key \
+		member list" 2>/dev/null | grep -i "$K8S_NODE_NAME" | grep -v "$K8S_NODE_IP" || true)
+
+	if [ -n "$stale_member" ]; then
+		stale_member_id=$(echo "$stale_member" | cut -d',' -f1)
+		echo "Removing stale etcd member $stale_member_id for $K8S_NODE_NAME"
+		ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host "docker run --rm \
+			-v /var/lib/rancher/k3s/server/tls/etcd:/certs:ro \
+			--network host \
+			quay.io/coreos/etcd:v3.5.9 etcdctl \
+			--endpoints=https://127.0.0.1:2379 \
+			--cacert=/certs/server-ca.crt \
+			--cert=/certs/client.crt \
+			--key=/certs/client.key \
+			member remove $stale_member_id" || true
+	fi
+
 	/usr/local/bin/k3s-install.sh server --node-name $DPSRV_REGION-$DPSRV_NODE \
 		--node-external-ip $K8S_NODE_IP \
 		--server https://$primary_name:6443 \
