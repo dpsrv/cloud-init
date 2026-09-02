@@ -1,5 +1,7 @@
 #!/bin/bash -ex
 
+export PATH=$PATH:/usr/local/bin
+
 SWD=$(dirname $0)
 
 [ ! -x /usr/local/bin/k3s-uninstall.sh ] || /usr/local/bin/k3s-uninstall.sh
