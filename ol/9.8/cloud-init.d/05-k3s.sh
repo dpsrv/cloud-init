@@ -130,11 +130,12 @@ fi
 
 [ -S /run/k3s/containerd/containerd.sock ] && chgrp k3s /run/k3s/containerd/containerd.sock || true
 
-# For agents, use primary's kubeconfig to check node status
+# For agents, fetch kubeconfig from primary
 if [ "$K3S_MODE" = "agent" ]; then
-	export KUBECONFIG=/tmp/k3s-primary.yaml
-	ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host sudo cat /etc/rancher/k3s/k3s.yaml > $KUBECONFIG
-	sed -i "s/127.0.0.1/$primary_name/g" $KUBECONFIG
+	[ -d ~/.kube ] || mkdir -p ~/.kube
+	ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host sudo cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
+	sed -i "s/127.0.0.1/$primary_name/g" ~/.kube/config
+	export KUBECONFIG=~/.kube/config
 fi
 
 until kubectl get node "$K8S_NODE_NAME" &>/dev/null; do
