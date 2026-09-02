@@ -1,0 +1,11 @@
+[Unit]
+Description=DPSRV init
+Requires=multi-user.target
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/dpsrv-init.sh
+
+[Install]
+WantedBy=multi-user.target

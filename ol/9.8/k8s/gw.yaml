@@ -1,0 +1,54 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 8025
+        name: smtp
+        protocol: TCP
+      hosts:
+        - "*"
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+        - "*"
+    - port:
+        number: 8143
+        name: imap
+        protocol: TCP
+      hosts:
+        - "*"
+    - port:
+        number: 443
+        name: https
+        protocol: HTTPS
+      hosts:
+        - "*"
+      tls:
+        mode: SIMPLE
+        credentialName: domain-credential
+    - port:
+        number: 8465
+        name: smtps
+        protocol: TCP
+      hosts:
+        - "*"
+    - port:
+        number: 8587
+        name: submission
+        protocol: TCP
+      hosts:
+        - "*"
+    - port:
+        number: 8993
+        name: imaps
+        protocol: TCP
+      hosts:
+        - "*"

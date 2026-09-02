@@ -1,0 +1,7 @@
+disable:
+  - traefik
+  - servicelb
+disable-cloud-controller: true
+write-kubeconfig-group: k3s
+write-kubeconfig-mode: "0640"
+cluster-cidr: 10.244.0.0/16

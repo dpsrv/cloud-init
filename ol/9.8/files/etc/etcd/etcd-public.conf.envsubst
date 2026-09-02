@@ -1,0 +1,27 @@
+ETCD_NAME="${DPSRV_REGION}-${DPSRV_NODE}"
+ETCD_DATA_DIR="/var/lib/etcd"
+
+ETCD_LISTEN_CLIENT_URLS="$ETCD_LISTEN_CLIENT_URLS"
+ETCD_ADVERTISE_CLIENT_URLS="http://127.0.0.1:2379,https://${DPSRV_REGION}-${DPSRV_NODE}.${DPSRV_DOMAIN}:2379"
+
+ETCD_LISTEN_PEER_URLS="$ETCD_LISTEN_PEER_URLS"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://${DPSRV_REGION}-${DPSRV_NODE}.${DPSRV_DOMAIN}:2380"
+
+ETCD_INITIAL_CLUSTER="${DPSRV_ETCD_CLUSTER}"
+ETCD_INITIAL_CLUSTER_STATE="existing"
+ETCD_INITIAL_CLUSTER_TOKEN="${DPSRV_ETCD_CLUSTER_TOKEN}"
+
+# TLS 
+ETCD_CERT_FILE="/etc/letsencrypt/live/domain/fullchain.pem"
+ETCD_KEY_FILE="/etc/letsencrypt/live/domain/privkey.pem"
+ETCD_TRUSTED_CA_FILE="/etc/letsencrypt/live/domain/chain.pem"
+ETCD_CLIENT_CERT_AUTH="true"
+
+ETCD_PEER_CERT_FILE="/etc/letsencrypt/live/domain/fullchain.pem"
+ETCD_PEER_KEY_FILE="/etc/letsencrypt/live/domain/privkey.pem"
+#ETCD_PEER_TRUSTED_CA_FILE="/etc/letsencrypt/live/domain/chain.pem"
+ETCD_PEER_TRUSTED_CA_FILE=""
+ETCD_PEER_CLIENT_CERT_AUTH="false"
+
+# Optional logging
+ETCD_LOG_LEVEL="info"
