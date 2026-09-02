@@ -46,6 +46,16 @@ else
 	echo "Secondary node"
 	primary_host=$(echo "$K8S_NODES"|head -1|awk '{ print $8 }' | sed 's/\.$//')
 	primary_name=${primary_host%.$DPSRV_DOMAIN*}
+
+	# Detect NAT environment (public IP not on interface)
+	if [ -z "$(ip -4 addr show | grep "$K8S_NODE_IP")" ]; then
+		echo "NAT environment detected - joining as agent (worker)"
+		K3S_MODE=agent
+	else
+		echo "Direct IP detected - joining as server"
+		K3S_MODE=server
+	fi
+
 	token=
 	while true; do
 		token=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host sudo cat /var/lib/rancher/k3s/server/node-token) || true
@@ -53,49 +63,69 @@ else
 		echo "Waiting on $primary_host for token"
 		sleep 5
 	done
+
 	# Get k3s version from primary to ensure compatibility
 	export INSTALL_K3S_VERSION=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host k3s --version | head -1 | awk '{print $3}')
 	echo "Installing k3s version $INSTALL_K3S_VERSION to match primary"
 
-	# Remove any existing etcd member for this node before joining
-	stale_members=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host "docker run --rm \
-		-v /var/lib/rancher/k3s/server/tls/etcd:/certs:ro \
-		--network host \
-		quay.io/coreos/etcd:v3.5.9 etcdctl \
-		--endpoints=https://127.0.0.1:2379 \
-		--cacert=/certs/server-ca.crt \
-		--cert=/certs/client.crt \
-		--key=/certs/client.key \
-		member list 2>/dev/null" | grep -i "$K8S_NODE_NAME" || true)
+	if [ "$K3S_MODE" = "server" ]; then
+		# Remove any existing etcd member for this node before joining
+		stale_members=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host "docker run --rm \
+			-v /var/lib/rancher/k3s/server/tls/etcd:/certs:ro \
+			--network host \
+			quay.io/coreos/etcd:v3.5.9 etcdctl \
+			--endpoints=https://127.0.0.1:2379 \
+			--cacert=/certs/server-ca.crt \
+			--cert=/certs/client.crt \
+			--key=/certs/client.key \
+			member list 2>/dev/null" | grep -i "$K8S_NODE_NAME" || true)
 
-	if [ -n "$stale_members" ]; then
-		echo "$stale_members" | while read member; do
-			member_id=$(echo "$member" | cut -d',' -f1 | tr -d ' ')
-			echo "Removing existing etcd member $member_id for $K8S_NODE_NAME"
-			ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host "docker run --rm \
-				-v /var/lib/rancher/k3s/server/tls/etcd:/certs:ro \
-				--network host \
-				quay.io/coreos/etcd:v3.5.9 etcdctl \
-				--endpoints=https://127.0.0.1:2379 \
-				--cacert=/certs/server-ca.crt \
-				--cert=/certs/client.crt \
-				--key=/certs/client.key \
-				member remove $member_id 2>/dev/null" || true
-		done
+		if [ -n "$stale_members" ]; then
+			echo "$stale_members" | while read member; do
+				member_id=$(echo "$member" | cut -d',' -f1 | tr -d ' ')
+				echo "Removing existing etcd member $member_id for $K8S_NODE_NAME"
+				ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host "docker run --rm \
+					-v /var/lib/rancher/k3s/server/tls/etcd:/certs:ro \
+					--network host \
+					quay.io/coreos/etcd:v3.5.9 etcdctl \
+					--endpoints=https://127.0.0.1:2379 \
+					--cacert=/certs/server-ca.crt \
+					--cert=/certs/client.crt \
+					--key=/certs/client.key \
+					member remove $member_id 2>/dev/null" || true
+			done
+		fi
+
+		/usr/local/bin/k3s-install.sh server --node-name $DPSRV_REGION-$DPSRV_NODE \
+			--node-ip $K8S_NODE_IP \
+			--node-external-ip $K8S_NODE_IP \
+			--advertise-address $K8S_NODE_IP \
+			--server https://$primary_name:6443 \
+			--token $token
+	else
+		/usr/local/bin/k3s-install.sh agent --node-name $DPSRV_REGION-$DPSRV_NODE \
+			--node-external-ip $K8S_NODE_IP \
+			--server https://$primary_name:6443 \
+			--token $token
 	fi
-
-	/usr/local/bin/k3s-install.sh server --node-name $DPSRV_REGION-$DPSRV_NODE \
-		--node-ip $K8S_NODE_IP \
-		--node-external-ip $K8S_NODE_IP \
-		--advertise-address $K8S_NODE_IP \
-		--server https://$primary_name:6443 \
-		--token $token
 fi
 
-chmod g+r /etc/rancher/k3s/k3s.yaml
-[ -d ~/.kube ] || mkdir -p ~/.kube
-cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
-chgrp k3s /run/k3s/containerd/containerd.sock /etc/rancher/k3s/k3s.yaml
+# Server nodes have k3s.yaml, agents don't
+if [ -f /etc/rancher/k3s/k3s.yaml ]; then
+	chmod g+r /etc/rancher/k3s/k3s.yaml
+	[ -d ~/.kube ] || mkdir -p ~/.kube
+	cat /etc/rancher/k3s/k3s.yaml > ~/.kube/config
+	chgrp k3s /etc/rancher/k3s/k3s.yaml
+fi
+
+[ -S /run/k3s/containerd/containerd.sock ] && chgrp k3s /run/k3s/containerd/containerd.sock || true
+
+# For agents, use primary's kubeconfig to check node status
+if [ "$K3S_MODE" = "agent" ]; then
+	export KUBECONFIG=/tmp/k3s-primary.yaml
+	ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host sudo cat /etc/rancher/k3s/k3s.yaml > $KUBECONFIG
+	sed -i "s/127.0.0.1/$primary_name/g" $KUBECONFIG
+fi
 
 until kubectl get node "$K8S_NODE_NAME" &>/dev/null; do
   echo "Waiting for $K8S_NODE_NAME to join"
