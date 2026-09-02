@@ -2,8 +2,9 @@
 
 SWD=$(dirname $0)
 
-dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/rhel/docker-ce.repo || true
-dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin etcd
+dnf config-manager --add-repo https://download.docker.com/linux/rhel/docker-ce.repo || true
+dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+dnf install -y etcd || true
 
 ln -s /mnt/data/dpsrv/rc/secrets/letsencrypt /etc/letsencrypt
 
