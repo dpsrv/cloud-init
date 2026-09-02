@@ -8,6 +8,7 @@ if [ ! -d /etc/rancher/k3s ]; then
 	cp -r $SWD/../files/etc/rancher/k3s /etc/rancher/k3s
 fi
 
+# Get routable IPs from interface (works on Contabo where public IP is on interface)
 export ROUTABLE_IPS=$(ip -4 addr show | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | grep -vE '^(10\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|192\.168\.|127\.)')
 
 export K8S_NODE_NAME=$DPSRV_REGION-$DPSRV_NODE
@@ -15,7 +16,13 @@ export K8S_NODES=$(host -t SRV k8s.$DPSRV_DOMAIN | sort -k6r)
 export K8S_NODE=$(echo "$K8S_NODES" | grep -n $K8S_NODE_NAME)
 export K8S_NODE_ID=$(echo "$K8S_NODE" | cut -d: -f1)
 export K8S_NODE_HOST=$(echo "$K8S_NODE" | awk '{ print $8 }'|sed 's/\.$//')
-export K8S_NODE_IP=$(getent hosts $K8S_NODE_HOST|awk '{ print $1 }')
+# Get public IP from DNS (works even behind NAT like Oracle Cloud)
+export K8S_NODE_IP=$(host $K8S_NODE_HOST | grep -oP '(?<=has address )\d+(\.\d+){3}' | head -1)
+
+# For NAT environments (Oracle Cloud), use DNS-resolved IP as routable
+if [ -z "$ROUTABLE_IPS" ] && [ -n "$K8S_NODE_IP" ]; then
+	export ROUTABLE_IPS=$K8S_NODE_IP
+fi
 
 groupadd k3s || true
 
@@ -27,6 +34,7 @@ fi
 if [ "$K8S_NODE_ID" = "1" ]; then
 	echo "Primary node"
 	/usr/local/bin/k3s-install.sh server --node-name $K8S_NODE_NAME \
+		--node-external-ip $K8S_NODE_IP \
 		--cluster-init
 	while true; do
 		token=$(cat /var/lib/rancher/k3s/server/node-token || true)
@@ -49,6 +57,7 @@ else
 	export INSTALL_K3S_VERSION=$(ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $primary_host k3s --version | head -1 | awk '{print $3}')
 	echo "Installing k3s version $INSTALL_K3S_VERSION to match primary"
 	/usr/local/bin/k3s-install.sh server --node-name $DPSRV_REGION-$DPSRV_NODE \
+		--node-external-ip $K8S_NODE_IP \
 		--server https://$primary_name:6443 \
 		--token $token
 fi
